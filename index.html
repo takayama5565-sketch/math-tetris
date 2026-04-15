@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Math & Tetris - 究極安定版 -</title>
+    <title>Math & Tetris - 大爆発連鎖版 -</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <style>
+        /* 📱 スクロール完全禁止＆1画面フルフィット設定 */
         html, body { height: 100dvh; margin: 0; padding: 0; overflow: hidden; touch-action: none; background-color: #090910; color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; -webkit-user-select: none; }
         
         #app-wrapper { display: flex; flex-direction: column; height: 100dvh; max-width: 500px; margin: 0 auto; box-sizing: border-box; padding: 5px; position: relative;}
         
+        /* ⚙️ ヘッダー */
         #header { flex: 0 0 50px; display: flex; justify-content: space-between; align-items: center; background: #12121f; border-bottom: 2px solid #00ffff; padding: 0 10px; border-radius: 8px 8px 0 0; box-shadow: 0 4px 10px rgba(0,255,255,0.2);}
         .title-area { display: flex; flex-direction: column; }
         h1 { color: #00ffff; font-size: 18px; margin: 0; text-shadow: 0 0 5px #00ffff; }
@@ -24,6 +26,7 @@
         .icon-btn { background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 5px 10px; font-size: 14px; cursor: pointer; }
         .icon-btn:active { background: #555; }
 
+        /* 🎮 中央：ゲーム画面 */
         #game-area { flex: 1 1 auto; position: relative; display: flex; justify-content: center; align-items: center; padding: 10px 0; min-height: 0; }
         #canvas-container { height: 100%; aspect-ratio: 1 / 2; position: relative; max-width: 100%; }
         #gameCanvas, #particleCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; }
@@ -33,15 +36,17 @@
         #next-box { position: absolute; top: 5px; right: 5px; width: 60px; height: 60px; background: rgba(0,0,0,0.8); border: 2px solid #00ffff; border-radius: 6px; z-index: 6; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px #000;}
         #nextCanvas { width: 100%; height: 100%; }
 
+        /* 🧮 下部：動的UIエリア (計算 ⇔ 操作) */
         #bottom-ui { flex: 0 0 220px; background: #12121f; border-top: 2px solid #ff00ff; border-radius: 0 0 8px 8px; padding: 10px; position: relative; box-shadow: 0 -4px 10px rgba(255,0,255,0.2);}
 
+        /* --- モード1：計算入力UI --- */
         #math-ui { display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
         #math-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        #math-status { color: #ff9800; font-size: 14px; font-weight: bold; }
+        #math-status { color: #00ffff; font-size: 14px; font-weight: bold; }
         
         .math-row { display: flex; align-items: center; justify-content: space-between; background: #000; border: 2px dashed #ffff00; border-radius: 8px; padding: 5px 15px; margin-bottom: 5px;}
         #math-problem { font-size: 26px; font-weight: bold; color: #ffff00; transition: 0.2s;}
-        #fake-input { font-size: 26px; font-weight: bold; color: #fff; background: #222; padding: 2px 15px; border-radius: 6px; min-width: 60px; text-align: right; border: 1px solid #555;}
+        #fake-input { font-size: 26px; font-weight: bold; color: #fff; background: #222; padding: 2px 15px; border-radius: 6px; min-width: 60px; text-align: right; border: 1px solid #555; min-height: 35px;}
         
         #numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1; }
         .num-btn { background: #333; color: #fff; border: 2px solid #555; border-radius: 8px; font-size: 22px; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 0 #111; transition: 0.1s;}
@@ -50,6 +55,7 @@
         .num-btn.enter { background: #00ccff; color: #000; border-color: #0099cc; box-shadow: 0 4px 0 #006688; grid-column: span 2;}
         .num-btn.zero { grid-column: span 2; }
 
+        /* --- モード2：テトリス操作UI --- */
         #tetris-ui { display: none; flex-direction: column; height: 100%; justify-content: space-between; }
         #t-status { color: #39ff14; font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 10px;}
         #t-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1;}
@@ -58,11 +64,12 @@
         .btn-drop { grid-column: span 4; background: linear-gradient(180deg, #ff00ff, #cc00cc); color: white; border: none; box-shadow: 0 6px 0 #880088; font-size: 22px;}
         .btn-drop:active { box-shadow: 0 0 0 #880088; background: #fff; color: #ff00ff;}
 
+        /* 📱 各種モーダル画面 */
         .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #12121f; border: 2px solid #00ffff; border-radius: 12px; padding: 20px; width: 100%; max-width: 350px; box-shadow: 0 0 30px rgba(0,255,255,0.2); }
         .modal h2 { color: #00ffff; margin-top: 0; text-align: center;}
         
-        .setting-group { margin-bottom: 15px; }
+        .setting-group { margin-bottom: 15px; text-align: left; }
         .setting-group label { font-size: 12px; color: #00ffff; display: block; margin-bottom: 5px;}
         select { width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #555; border-radius: 6px; font-size: 16px; font-weight:bold;}
         
@@ -77,6 +84,7 @@
 
         .hidden { display: none !important; }
         
+        /* エフェクト */
         .correct-flash { background-color: #39ff14 !important; color: #000 !important; }
         .error-flash { background-color: #ff0055 !important; color: #fff !important; }
         .gold-alert { border-color: #FFD700 !important; box-shadow: 0 0 40px #FFD700 !important; }
@@ -84,10 +92,10 @@
         .rainbow-alert { border-color: #ff00ff !important; box-shadow: 0 0 50px #ff00ff !important; }
         
         .shake-animation { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake { 0%, 100% { transform: translate3d(0,0,0); } 20%, 60% { transform: translate3d(-8px,6px,0); } 40%, 80% { transform: translate3d(8px,-6px,0); } }
+        @keyframes shake { 0%, 100% { transform: translate3d(0,0,0); } 20%, 60% { transform: translate3d(-10px,8px,0); } 40%, 80% { transform: translate3d(10px,-8px,0); } }
         
-        .popup-text { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #ff00ff; font-size: 40px; font-weight: bold; text-shadow: 0 0 20px #fff; z-index: 20; pointer-events: none; animation: popUp 0.8s forwards; }
-        @keyframes popUp { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -70%) scale(1); } }
+        .popup-text { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #ff00ff; font-size: 40px; font-weight: bold; text-shadow: 0 0 20px #fff; z-index: 20; pointer-events: none; animation: popUp 1s forwards; }
+        @keyframes popUp { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -70%) scale(1.1); } }
     </style>
 </head>
 <body>
@@ -207,25 +215,18 @@
             <h2>NEW RECORD!</h2>
             <p style="font-size:14px; text-align:center;">トップ10にランクイン！<br>名前を記録してください。</p>
             <input type="text" id="dq-name" maxlength="10" placeholder="NAME (10文字)" autocomplete="off" style="width:100%; padding:15px; font-size:20px; text-align:center; background:#000; color:#00ffff; border:2px solid #00ffff; border-radius:8px; margin-bottom:15px; box-sizing:border-box;">
-            <button class="action-btn" onclick="saveNameRecord()">SAVE RECORD</button>
+            <button class="action-btn" id="dq-submit-btn">SAVE RECORD</button>
         </div>
     </div>
 </div>
 
 <script>
 // ==========================================
-// 🔴 【重要】iPhoneの誤操作防止 (ズーム＆スクロール完全禁止)
+// 🔴 iPhoneの誤操作防止 (ズーム禁止)
 // ==========================================
-document.addEventListener('touchmove', function(e) {
-    if (e.touches.length > 1) e.preventDefault(); // ピンチズーム禁止
-}, { passive: false });
-
+document.addEventListener('touchmove', function(e) { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 let lastTouchEnd = 0;
-document.addEventListener('touchend', function(e) {
-    let now = (new Date()).getTime();
-    if (now - lastTouchEnd <= 300) e.preventDefault(); // ダブルタップズーム禁止
-    lastTouchEnd = now;
-}, { passive: false });
+document.addEventListener('touchend', function(e) { let now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) e.preventDefault(); lastTouchEnd = now; }, { passive: false });
 
 // ==========================================
 // 🔴 Firebaseの設定と安全な起動
@@ -243,22 +244,18 @@ const firebaseConfig = {
 
 let db = null;
 let userId = 'UID_GUEST';
-// localStorageのエラーでフリーズするのを防ぐ
 try {
     let storedId = localStorage.getItem('math_tetris_uid');
-    if (!storedId) {
-        storedId = 'UID_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-        localStorage.setItem('math_tetris_uid', storedId);
-    }
+    if (!storedId) { storedId = 'UID_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(); localStorage.setItem('math_tetris_uid', storedId); }
     userId = storedId;
-} catch (e) { console.warn("保存機能が制限されています"); }
+} catch (e) { console.warn("Local storage limited"); }
 
 try {
     if (firebaseConfig.apiKey !== "ここにあなたのAPIキー") {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
     }
-} catch(e) { console.error("Firebase通信エラー", e); }
+} catch(e) { console.error("Firebaseエラー", e); }
 
 // ==========================================
 // 🎮 ゲームコア変数
@@ -276,60 +273,71 @@ let problemCount = 0; let piecesPlaced = 0;
 let currentPlayedLevel = "1"; let problemStartTime = 0; 
 let isNextHidden = false; let finalScoreToSave = 0; let currentInputStr = "";
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
 const SHAPES = [ [], [[1,1,1,1]], [[2,2],[2,2]], [[0,3,3],[3,3,0]], [[4,4,0],[0,4,4]], [[5,0,0],[5,5,5]], [[0,0,6],[6,6,6]], [[0,7,0],[7,7,7]] ];
 const COLORS = [null, '#FF0055', '#00FFFF', '#39FF14', '#FF5F1F', '#FFFF00', '#0044FF', '#FF00FF', null, '#FFD700', '#444444', '#FFFFFF'];
 
 // --- UI切替管理 ---
-function showMathUI() {
-    document.getElementById('math-ui').style.display = 'flex';
-    document.getElementById('tetris-ui').style.display = 'none';
-}
-function showTetrisUI() {
-    document.getElementById('math-ui').style.display = 'none';
-    document.getElementById('tetris-ui').style.display = 'flex';
-}
-function openSettings() { 
-    document.getElementById('settings-modal').classList.remove('hidden'); 
-    if(!isGameOver) document.getElementById('close-settings-btn').style.display = 'block';
-}
-function closeSettings() { 
-    if(!isGameOver) document.getElementById('settings-modal').classList.add('hidden'); 
-}
+function showMathUI() { document.getElementById('math-ui').style.display = 'flex'; document.getElementById('tetris-ui').style.display = 'none'; }
+function showTetrisUI() { document.getElementById('math-ui').style.display = 'none'; document.getElementById('tetris-ui').style.display = 'flex'; }
+function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); if(!isGameOver) document.getElementById('close-settings-btn').style.display = 'block'; }
+function closeSettings() { if(!isGameOver) document.getElementById('settings-modal').classList.add('hidden'); }
 function openRanking() { document.getElementById('ranking-modal').classList.remove('hidden'); loadRanking(); }
 function closeRanking() { document.getElementById('ranking-modal').classList.add('hidden'); }
-
 function vibrate(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
 
-// --- オーディオ ---
-function initAudio() { try { if (audioCtx.state === 'suspended') audioCtx.resume(); } catch(e){} }
-function playBreakSound(intensity, linesCleared) {
-    try {
-        if (audioCtx.state === 'suspended') return;
-        const time = audioCtx.currentTime;
-        const chord = [1046.50, 1318.51, 1567.98, 2093.00]; 
-        for (let i = 0; i < Math.min(linesCleared, 4); i++) {
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(chord[i], time + (i * 0.08)); 
-            gain.gain.setValueAtTime(0.4, time + (i * 0.08)); gain.gain.exponentialRampToValueAtTime(0.01, time + (i * 0.08) + 0.6); 
-            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(time + (i * 0.08)); osc.stop(time + (i * 0.08) + 0.6);
-        }
-        const times = intensity === 'rainbow' || intensity === 'black' ? 25 : (intensity === 'gold' ? 15 : 6); 
-        for (let i = 0; i < times; i++) {
-            setTimeout(() => {
-                if (audioCtx.state === 'suspended') return;
-                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.type = 'square'; osc.frequency.setValueAtTime(80 + Math.random() * 150, audioCtx.currentTime); 
-                osc.frequency.exponentialRampToValueAtTime(5, audioCtx.currentTime + 0.3); 
-                gain.gain.setValueAtTime(0.6, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-            }, i * 20); 
-        }
-    } catch(e){}
+// --- 💥 大爆発サウンドシステム ---
+function initAudio() { 
+    try { 
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume(); 
+    } catch(e){} 
 }
+
+function playExplosion(comboCount) {
+    if (!audioCtx || audioCtx.state === 'suspended') return;
+    try {
+        const time = audioCtx.currentTime;
+        const duration = 0.5 + (Math.min(comboCount, 5) * 0.1); // 連鎖で音が長くなる
+        
+        // 1. ノイズによる爆発音
+        const bufferSize = audioCtx.sampleRate * duration;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        // 連鎖すると音がより高く、鋭くなる
+        filter.frequency.setValueAtTime(600 + (comboCount * 300), time);
+        filter.frequency.exponentialRampToValueAtTime(10, time + duration);
+        
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(1.0 + (comboCount * 0.2), time); // 連鎖で大音量
+        gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+        
+        noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+        noise.start(time);
+        
+        // 2. ドーン！という重低音のサブベースを追加
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(120 + (comboCount * 20), time);
+        osc.frequency.exponentialRampToValueAtTime(1, time + duration);
+        const oscGain = audioCtx.createGain();
+        oscGain.gain.setValueAtTime(1.5, time);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+        osc.connect(oscGain); oscGain.connect(audioCtx.destination);
+        osc.start(time); osc.stop(time + duration);
+    } catch(e) {}
+}
+
 function playSound(type) {
     try {
-        if (audioCtx.state === 'suspended') return;
+        if (!audioCtx || audioCtx.state === 'suspended') return;
         const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
         osc.connect(gain); gain.connect(audioCtx.destination);
         if (type === 'correct') { 
@@ -405,8 +413,8 @@ function generateMathProblem() {
     currentInputStr = ""; document.getElementById('fake-input').innerText = "";
     canOperate = false;
     
-    document.getElementById('math-status').innerText = problemCount === 1 ? "答えを入力してENTER!" : "解読しろ！(SOLVE IT)";
-    document.getElementById('math-status').style.color = "#ff00ff";
+    document.getElementById('math-status').innerText = problemCount === 1 ? "答えを入力してENTER" : "解読しろ！(SOLVE IT)";
+    document.getElementById('math-status').style.color = "#00ffff";
     problemStartTime = Date.now(); 
     
     showMathUI();
@@ -445,25 +453,19 @@ function submitAnswer() {
 
 // --- スワイプ＆タップ操作 ---
 let touchStartX = 0; let touchStartY = 0;
-canvas.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-}, {passive: false});
-
+canvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: false});
 canvas.addEventListener('touchmove', e => {
     if (!canOperate || isGameOver) return;
     let touchX = e.touches[0].clientX; let touchY = e.touches[0].clientY;
     let dx = touchX - touchStartX; let dy = touchY - touchStartY;
-    
     if (dx > 25) { moveRight(); touchStartX = touchX; touchStartY = touchY; vibrate(5);}
     else if (dx < -25) { moveLeft(); touchStartX = touchX; touchStartY = touchY; vibrate(5);}
     if (dy > 35) { dropOne(); touchStartX = touchX; touchStartY = touchY; vibrate(5);}
 }, {passive: false});
-
 canvas.addEventListener('touchend', e => {
     if (!canOperate || isGameOver) return;
     let touchEndX = e.changedTouches[0].clientX; let touchEndY = e.changedTouches[0].clientY;
     let dx = touchEndX - touchStartX; let dy = touchEndY - touchStartY;
-    
     if (Math.abs(dx) < 10 && Math.abs(dy) < 10) { rotatePiece(); vibrate(10); }
     else if (dy > 40 && Math.abs(dx) < 20) { hardDrop(); vibrate(20); } 
 });
@@ -544,7 +546,7 @@ function merge() {
     piecesPlaced++;
     if (piecesPlaced % 15 === 0 && currentSpeedLevel < 15) {
         currentSpeedLevel++; document.getElementById('speed').value = currentSpeedLevel; 
-        dropSpeed = Math.max(150, 2200 - (currentSpeedLevel * 200)); playSound('levelup');
+        dropSpeed = Math.max(150, 2200 - (currentSpeedLevel * 200)); playSound('levelup'); showPopupText("SPEED UP!");
     }
     document.getElementById('speed-level-display').innerText = `Lv.${Math.floor(piecesPlaced/15)+1} (SPD: ${currentSpeedLevel})`;
 }
@@ -574,14 +576,19 @@ async function processChains(comboCount = 0) {
         comboCount++; let comboMultiplier = comboCount > 1 ? comboCount : 1;
         let gainedScore = clearedCount * 100 * currentSpeedLevel * comboMultiplier;
         
-        if (hasRainbowTrigger) { gainedScore += 10000; playBreakSound('rainbow', clearedCount); triggerShake(); vibrate(100); showPopupText("ALL CLEAR!!"); } 
-        else if (hasGoldTrigger) { gainedScore *= 2; playBreakSound('gold', clearedCount); triggerShake(); vibrate(50); showPopupText("💥BOMB!"); } 
-        else if (willDestroyAllBlacks) { playBreakSound('black', clearedCount); triggerShake(); vibrate(50); showPopupText("CRITICAL!!"); } 
-        else { playBreakSound('normal', clearedCount); vibrate(20);}
+        if (hasRainbowTrigger) { gainedScore += 10000; playExplosion(comboCount); triggerShake(3); vibrate(100); showPopupText("ALL CLEAR!!"); } 
+        else if (hasGoldTrigger) { gainedScore *= 2; playExplosion(comboCount); triggerShake(2); vibrate(50); showPopupText("💥BOMB!"); } 
+        else if (willDestroyAllBlacks) { playExplosion(comboCount); triggerShake(2); vibrate(50); showPopupText("CRITICAL!!"); } 
+        else { playExplosion(comboCount); triggerShake(1); vibrate(20);}
+        
         if (blackBlocksDestroyed > 0) gainedScore += (blackBlocksDestroyed * 1000); 
 
         score += gainedScore; document.getElementById('score').innerText = score;
-        document.getElementById('combo-display').innerText = (comboCount > 1 ? ` ${comboCount} CHAIN! ` : "") + (blackBlocksDestroyed > 0 ? ` BLACK x${blackBlocksDestroyed} ` : "");
+        
+        let displayMsg = "";
+        if (comboCount > 1) { displayMsg += ` ${comboCount} CHAIN!🔥 `; showPopupText(`${comboCount} CHAIN!`); }
+        if (blackBlocksDestroyed > 0) displayMsg += ` BLACK x${blackBlocksDestroyed} `;
+        document.getElementById('combo-display').innerText = displayMsg;
         
         canvas.style.backgroundColor = hasRainbowTrigger ? "#ff00ff" : (hasGoldTrigger ? "#ffeb3b" : (willDestroyAllBlacks ? "#ff0055" : "#fff")); 
         setTimeout(() => canvas.style.backgroundColor = "#050510", 150);
@@ -594,7 +601,13 @@ async function processChains(comboCount = 0) {
 function applyGravity() {
     for (let c = 0; c < COLS; c++) { let emptyRow = ROWS - 1; for (let r = ROWS - 1; r >= 0; r--) { if (board[r][c] !== 0) { if (r !== emptyRow) { board[emptyRow][c] = board[r][c]; board[r][c] = 0; } emptyRow--; } } }
 }
-function triggerShake() { let wrapper = document.getElementById('canvas-wrapper'); wrapper.classList.remove('shake-animation'); void wrapper.offsetWidth; wrapper.classList.add('shake-animation'); }
+function triggerShake(level) { 
+    let wrapper = document.getElementById('canvas-wrapper'); wrapper.classList.remove('shake-animation'); 
+    void wrapper.offsetWidth; 
+    // 連鎖や爆発の強さで揺れを少しだけ長くする
+    wrapper.style.animationDuration = (0.2 + level*0.1) + 's';
+    wrapper.classList.add('shake-animation'); 
+}
 function drop() { if (!canOperate || isGameOver) return; if (!collideAt(currentPiece.x, currentPiece.y + 1, currentPiece.shape)) { currentPiece.y++; update(); } else { canOperate = false; merge(); processChains(); } }
 function update() { drawBoard(); drawGhost(); drawPiece(); }
 
@@ -604,13 +617,11 @@ function dropOne() { if (canOperate && !isGameOver) { drop(); vibrate(5);} }
 function rotatePiece() { if (!canOperate || isGameOver) return; const newShape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i]).reverse()); if (!collideAt(currentPiece.x, currentPiece.y, newShape)) { currentPiece.shape = newShape; update(); vibrate(10);} }
 function hardDrop() { if (!canOperate || isGameOver) return; while (!collideAt(currentPiece.x, currentPiece.y + 1, currentPiece.shape)) { currentPiece.y++; } canOperate = false; merge(); processChains(); vibrate(20);}
 
-// ==========================================
-// 🚀 確実なゲーム起動システム
-// ==========================================
+// 💡 確実なスタートボタンのイベント
 document.getElementById('start-btn').addEventListener('click', () => { 
-    initAudio(); // 音声をアククティブ化
-    document.getElementById('settings-modal').classList.add('hidden'); // 設定を隠す
-    startGame(); // 💡確実にゲームループを呼ぶ
+    initAudio(); 
+    document.getElementById('settings-modal').classList.add('hidden');
+    startGame(); 
 });
 
 function startGame() {
@@ -623,10 +634,11 @@ function startGame() {
 
     document.getElementById('score').innerText = score;
     document.getElementById('combo-display').innerText = "";
-    document.getElementById('speed-level-display').innerText = `Lv.${Math.floor(piecesPlaced/15)+1} (SPD: ${currentSpeedLevel})`;
+    document.getElementById('speed-level-display').innerText = `Lv.1 (SPD: ${currentSpeedLevel})`;
     
     document.getElementById('play-area').classList.remove('hidden');
     document.getElementById('game-over-modal').classList.add('hidden');
+    document.getElementById('close-settings-btn').style.display = 'block';
 
     if(gameInterval) clearInterval(gameInterval); 
     spawnPiece(); 
@@ -635,7 +647,6 @@ function startGame() {
 function gameOver() {
     isGameOver = true; if(gameInterval) clearInterval(gameInterval);
     document.getElementById('math-status').innerText = "SYSTEM DOWN"; document.getElementById('math-status').style.color = "#ff0055";
-    document.getElementById('answer-btn').disabled = true;
     document.getElementById('game-over-modal').classList.remove('hidden');
     finalScoreToSave = score; checkRanking(finalScoreToSave);
 }
@@ -661,14 +672,19 @@ async function checkRanking(finalScore) {
         document.getElementById('dq-modal').classList.remove('hidden'); document.getElementById('dq-name').value = '';
     }
 }
+
+// 💡 確実に保存するイベント設定
+document.getElementById('dq-submit-btn').addEventListener('click', saveNameRecord);
+
 function saveNameRecord() {
     let name = document.getElementById('dq-name').value || 'ゆうしゃ';
     if(db) {
         db.collection(`ranks_level_${currentPlayedLevel}`).add({ name: name, score: finalScoreToSave, timestamp: new Date() }).then(docRef => {
             document.getElementById('dq-modal').classList.add('hidden'); document.getElementById('level').value = currentPlayedLevel; openRanking(); loadRanking(docRef.id); 
-        });
+        }).catch(e=>{});
     }
 }
+window.addEventListener('load', loadRanking);
 </script>
 </body>
 </html>
