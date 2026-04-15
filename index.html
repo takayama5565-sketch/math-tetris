@@ -3,24 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Math & Tetris - セーブ機能搭載版 -</title>
+    <title>Math & Tetris - クラウドセーブ＆スーパーキッズ版 -</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <style>
-        /* 📱 基本リセット＆ベース設定 */
         html, body { height: 100dvh; margin: 0; padding: 0; overflow: hidden; touch-action: none; background-color: #0f172a; color: #fff; font-family: 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', 'Segoe UI', sans-serif; user-select: none; -webkit-user-select: none; }
-        
         #app-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100vw; box-sizing: border-box; }
         
         #mobile-header { flex: 0 0 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: #1e293b; border-bottom: 3px solid #38bdf8; z-index: 10;}
         #mobile-header h1 { color: #38bdf8; font-size: 20px; margin: 0; }
-        .score-box { font-size: 22px; font-weight: bold; color: #fb7185; margin: 0;}
+        .score-box { font-size: 24px; font-weight: 900; margin: 0;}
         .menu-btn { background: #334155; color: #38bdf8; border: 2px solid #38bdf8; border-radius: 8px; padding: 6px 12px; font-weight: bold; cursor: pointer; }
 
-        #left-panel { display: none; flex-direction: column; padding: 15px; background: #1e293b; border-radius: 12px; border: 3px solid #38bdf8; box-sizing: border-box; overflow-y: auto;}
+        /* 💡 虹色に輝くスーパースコアのアニメーション */
+        .super-score {
+            background: linear-gradient(45deg, #facc15, #f43f5e, #38bdf8, #a855f7, #facc15);
+            background-size: 300% 300%;
+            animation: gradient-glow 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+            display: inline-block;
+        }
+        @keyframes gradient-glow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        #left-panel { display: none; flex-direction: column; padding: 20px; background: #1e293b; border-radius: 12px; border: 3px solid #38bdf8; box-sizing: border-box; overflow-y: auto;}
         
-        #center-panel { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px; min-height: 0; width: 100%; box-sizing: border-box;}
+        #center-panel { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px; min-height: 0; width: 100%; box-sizing: border-box;}
         #canvas-wrapper { position: relative; height: 100%; aspect-ratio: 1/2; max-width: 100%; display: flex; justify-content: center; align-items: center;}
         #gameCanvas, #particleCanvas { position: absolute; top: 0; height: 100%; border-radius: 8px; aspect-ratio: 1/2; }
         #gameCanvas { background-color: #020617; border: 3px solid #38bdf8; box-sizing: border-box; box-shadow: 0 0 15px rgba(56,189,248,0.3);}
@@ -56,42 +66,45 @@
         .btn-drop { grid-column: span 4; background: #fb7185; color: white; border: 3px solid #e11d48; box-shadow: 0 6px 0 #9f1239; font-size: 24px;}
         .btn-drop:active { box-shadow: 0 0 0 #9f1239; background: #fff; color: #fb7185;}
 
-        .setting-group { margin-bottom: 10px; text-align: left; }
-        .setting-group label { font-size: 12px; color: #38bdf8; display: block; margin-bottom: 2px; font-weight: bold;}
-        select { width: 100%; padding: 10px; background: #334155; color: #fff; border: 2px solid #64748b; border-radius: 8px; font-size: 14px; font-weight: bold; box-sizing: border-box;}
+        .setting-group { margin-bottom: 15px; text-align: left; }
+        .setting-group label { font-size: 14px; color: #38bdf8; display: block; margin-bottom: 5px; font-weight: bold;}
+        select { width: 100%; padding: 12px; background: #334155; color: #fff; border: 2px solid #64748b; border-radius: 8px; font-size: 16px; font-weight: bold; box-sizing: border-box;}
         
-        .action-btn { width: 100%; padding: 15px; background: #a855f7; color: #fff; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; margin-top: 5px; box-shadow: 0 4px 0 #7e22ce; cursor: pointer; transition: 0.1s;}
-        .action-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #7e22ce; background: #d8b4fe; color: #581c87; }
-        .close-btn { background: #64748b; box-shadow: 0 4px 0 #334155; margin-top: 10px;}
+        .action-btn { width: 100%; padding: 15px; background: #a855f7; color: #fff; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; margin-top: 10px; box-shadow: 0 6px 0 #7e22ce; cursor: pointer; transition: 0.1s;}
+        .action-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #7e22ce; background: #d8b4fe; color: #581c87; }
         
-        /* 💡 セーブデータからの再開ボタン */
-        #resume-btn { background: #eab308; box-shadow: 0 4px 0 #a16207; color: #000; display: none; margin-bottom: 10px;}
-        #resume-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #a16207; background: #fde047; }
-
+        /* 💡 新しいセーブ＆ロードボタンの色 */
+        .save-btn { background: #eab308; box-shadow: 0 6px 0 #a16207; color: #000; margin-bottom: 10px;}
+        .save-btn:active { box-shadow: 0 0 0 #a16207; background: #fef08a; }
+        
+        .close-btn { background: #64748b; box-shadow: 0 6px 0 #334155; margin-top: 10px;}
+        
         #combo-display { color: #facc15; font-weight: bold; font-size: 16px; text-align: center; height: 20px; margin-bottom: 5px;}
 
+        /* 💻 パソコン用レイアウト (絶対にはみ出さない設計) */
         @media (min-width: 800px) {
-            #app-wrapper { flex-direction: row; justify-content: center; align-items: stretch; padding: 20px; max-width: 1100px; margin: 0 auto; gap: 20px; box-sizing: border-box;}
+            #app-wrapper { flex-direction: row; justify-content: center; align-items: stretch; padding: 20px; max-width: 1100px; gap: 20px; margin: 0 auto;}
             #mobile-header { display: none; }
-            #left-panel { display: flex !important; position: static; width: 280px; flex: 0 0 280px; height: 100%; box-shadow: 0 0 20px rgba(56,189,248,0.2); }
-            #center-panel { flex: 1 1 auto; height: 100%; padding: 0; min-width: 0; }
-            #right-panel { flex: 0 0 380px; height: 100%; border-top: none; border: 3px solid #fb7185; border-radius: 12px; justify-content: center;}
+            #left-panel { display: flex !important; position: static; width: 300px; flex: 0 0 300px; box-shadow: 0 0 20px rgba(56,189,248,0.2); }
+            #center-panel { height: 85vh; padding: 0; }
+            #right-panel { flex: 0 0 380px; height: 85vh; border-top: none; border: 3px solid #fb7185; border-radius: 12px;}
             #numpad, #t-controls { display: none !important; }
+            
             .pc-title { display: block; color: #38bdf8; font-size: 28px; text-align: center; margin: 0 0 20px 0; font-weight: 900;}
             .close-btn { display: none; }
-            .pc-score-box { display: block; font-size: 32px; font-weight: bold; color: #fb7185; margin-bottom: 20px; text-align: center;}
+            .pc-score-box { display: block; font-size: 40px; text-align: center; margin-bottom: 20px;}
             
             .math-row { flex-direction: column; padding: 30px 15px; gap: 20px; border-width: 4px; background: #1e293b;}
             #math-problem { font-size: 48px; }
             #math-status { font-size: 20px; margin-bottom: 15px;}
-            #math-input-display { font-size: 40px; height: 60px; line-height: 60px; text-align: center; background: #fff; color: #000; border: 4px solid #38bdf8; min-width: 100%;}
             
-            #pc-enter-btn { display: block !important; width: 100%; padding: 15px; background: #38bdf8; color: #000; font-size: 28px; font-weight: 900; border-radius: 12px; border: none; box-shadow: 0 6px 0 #0284c7; cursor: pointer; margin-top: 20px;}
-            #pc-enter-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #0284c7;}
+            #real-input-container { display: flex !important; gap: 10px; width: 100%;}
+            #math-answer-real { flex: 1; padding: 15px; border-radius: 8px; font-size: 32px; text-align: center; font-weight: bold; border: 3px solid #64748b; background: #fff; color: #000;}
+            #answer-btn-real { width: 100px; padding: 0; background-color: #38bdf8; box-shadow: 0 6px 0 #0284c7; color: #000; font-weight: 900; font-size: 20px; border-radius: 8px; border: none; cursor: pointer;}
+            #answer-btn-real:active { transform: translateY(6px); box-shadow: 0 0 0 #0284c7;}
         }
         
-        .pc-title, .pc-score-box, #pc-enter-btn { display: none; }
-
+        .pc-title, .pc-score-box, #real-input-container { display: none; }
         .mobile-modal { position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important; background: rgba(15,23,42,0.95) !important; z-index: 100; display: flex; justify-content: center; align-items: center; border: none !important; }
 
         .hidden { display: none !important; }
@@ -103,14 +116,12 @@
         .shake-animation { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake { 0%, 100% { transform: translate3d(0,0,0); } 20%, 60% { transform: translate3d(-10px,8px,0); } 40%, 80% { transform: translate3d(10px,-8px,0); } }
         
-        /* 💡 自由な位置にPOPを出すためのクラス */
-        .dynamic-popup { position: absolute; transform: translate(-50%, -50%); font-weight: 900; z-index: 50; pointer-events: none; animation: popUpFloat 1.2s forwards; white-space: nowrap; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; }
-        @keyframes popUpFloat { 0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); } 15% { opacity: 1; transform: translate(-50%, -30px) scale(1.2); } 80% { opacity: 1; transform: translate(-50%, -40px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -60px) scale(1.1); } }
+        .popup-text { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #facc15; font-size: 45px; font-weight: 900; text-shadow: 0 0 20px #000; z-index: 20; pointer-events: none; animation: popUp 1s forwards; white-space: nowrap;}
+        @keyframes popUp { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -70%) scale(1.1); } }
 
         #game-over-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 8px; z-index: 10; }
-        
-        #ranking-board { max-height: 200px; overflow-y: auto; text-align: left; font-size: 16px; margin-top: 20px; border-top: 2px solid #334155; padding-top: 15px;}
-        .rank-item { padding: 8px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between;}
+        #ranking-board { max-height: 150px; overflow-y: auto; text-align: left; font-size: 16px; margin-top: 15px; border-top: 2px solid #334155; padding-top: 10px;}
+        .rank-item { padding: 6px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between;}
     </style>
 </head>
 <body>
@@ -118,14 +129,15 @@
 <div id="app-wrapper">
     <div id="mobile-header">
         <h1>MATH TETRIS</h1>
-        <div class="score-box"><span id="score-mobile">0</span>点</div>
+        <div class="score-box"><span class="super-score" id="score-mobile">0</span></div>
         <button class="menu-btn" onclick="openMobileSettings()">設定・中断</button>
     </div>
 
     <div id="left-panel">
         <h2 class="pc-title">MATH TETRIS<br><span style="font-size:14px; color:#aaa;">キッズモード</span></h2>
         
-        <button class="action-btn" id="resume-btn" onclick="resumeGame()">▶️ 続きから遊ぶ</button>
+        <button class="action-btn save-btn" id="resume-btn" onclick="openLoadModal()">▶️ 続きから遊ぶ</button>
+        <button class="action-btn save-btn" id="save-quit-btn" onclick="saveAndQuitGame()" style="display:none;">💾 セーブして終わる</button>
 
         <div class="setting-group">
             <label>📖 計算のレベル</label>
@@ -141,7 +153,7 @@
             </select>
         </div>
         <div class="setting-group">
-            <label>⏱ タイムボーナス (はやく答えると得点UP!)</label>
+            <label>⏱ タイムボーナス</label>
             <select id="time-limit">
                 <option value="0">なし (じっくり考える)</option>
                 <option value="10">10秒以内 に答える！</option>
@@ -184,7 +196,7 @@
     </div>
 
     <div id="right-panel">
-        <div class="pc-score-box">得点: <span id="score-pc-val">0</span>点</div>
+        <div class="pc-score-box">SCORE<br><span class="super-score" id="score-pc-val">0</span></div>
         <div id="combo-display"></div>
 
         <div id="math-ui">
@@ -193,10 +205,13 @@
             
             <div class="math-row" id="problem-box">
                 <div id="math-problem">???</div>
-                <div id="math-input-display">_</div>
+                <div id="math-input-display" class="mobile-only">_</div>
+                
+                <form id="real-input-container">
+                    <input type="text" id="math-answer-real" placeholder="答え" autocomplete="off" disabled>
+                    <button type="submit" id="answer-btn-real" disabled>決定</button>
+                </form>
             </div>
-            
-            <button id="pc-enter-btn" onclick="submitAnswer()">決定</button>
             
             <div id="numpad">
                 <div class="num-btn" ontouchstart="inputPad('7', event)" onmousedown="inputPad('7', event)">7</div>
@@ -229,7 +244,27 @@
     </div>
 </div>
 
-<div id="dq-modal" class="hidden" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:200; display:flex; justify-content:center; align-items:center;">
+<div id="save-modal" class="hidden mobile-modal" style="z-index: 300;">
+    <div style="background:#1e293b; border:4px solid #facc15; border-radius:12px; padding:30px; width:90%; max-width:400px; text-align:center;">
+        <h2 style="color:#facc15; margin-top:0;">セーブ完了！</h2>
+        <p style="font-size:16px; color:#fff;">あなたの「ふっかつのパスワード」は<br>これです！忘れないでね！</p>
+        <div style="background:#000; color:#4ade80; font-size:48px; font-weight:900; padding:10px; border-radius:8px; border:2px dashed #4ade80; margin:20px 0; letter-spacing:5px;" id="save-code-display"></div>
+        <p style="font-size:12px; color:#aaa;">※Safariの履歴を消しても、このパスワードを<br>入力すれば続きから遊べます。</p>
+        <button class="action-btn" onclick="location.reload()">タイトルへ戻る</button>
+    </div>
+</div>
+
+<div id="load-modal" class="hidden mobile-modal" style="z-index: 300;">
+    <div style="background:#1e293b; border:4px solid #eab308; border-radius:12px; padding:30px; width:90%; max-width:400px; text-align:center;">
+        <h2 style="color:#eab308; margin-top:0;">続きから遊ぶ</h2>
+        <p style="font-size:16px; color:#fff;">4ケタのパスワードを入力してね。<br>（同じスマホなら空っぽでもOK！）</p>
+        <input type="number" id="load-code-input" placeholder="パスワード (4ケタ)" autocomplete="off" style="width:100%; padding:15px; font-size:24px; text-align:center; background:#fff; color:#000; border:2px solid #64748b; border-radius:8px; margin-bottom:20px; box-sizing:border-box;">
+        <button class="action-btn save-btn" onclick="executeLoad()">再開する！</button>
+        <button class="action-btn close-btn" onclick="document.getElementById('load-modal').classList.add('hidden')">もどる</button>
+    </div>
+</div>
+
+<div id="dq-modal" class="hidden mobile-modal">
     <div style="background:#1e293b; border:4px solid #38bdf8; border-radius:12px; padding:30px; width:90%; max-width:400px; text-align:center;">
         <h2 style="color:#facc15; margin-top:0; font-size:32px;">大記録 達成！</h2>
         <p style="font-size:16px; color:#fff; font-weight:bold;">トップ10に 入りました！<br>名前を おしえてください。</p>
@@ -239,12 +274,16 @@
 </div>
 
 <script>
+// ==========================================
 // 🔴 iPhone誤操作防止
+// ==========================================
 document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 let lastTouchEnd = 0;
 document.addEventListener('touchend', e => { let now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) e.preventDefault(); lastTouchEnd = now; }, { passive: false });
 
-// 🔴 Firebase設定
+// ==========================================
+// 🔴 Firebase設定 ＆ クラウドセーブ準備
+// ==========================================
 // 👇 ここにあなたのFirebase設定を貼り付けます 👇
 const firebaseConfig = {
   apiKey: "AIzaSyDPMTQWtywKFLKHB4wNpCqLV2BsOJedFbc",
@@ -256,11 +295,14 @@ const firebaseConfig = {
 };
 
 let db = null;
-let userId = 'UID_GUEST';
+let mySaveCode = '0000';
 try {
-    let storedId = localStorage.getItem('math_tetris_uid');
-    if (!storedId) { storedId = 'UID_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(); localStorage.setItem('math_tetris_uid', storedId); }
-    userId = storedId;
+    let code = localStorage.getItem('math_tetris_save_code');
+    if (!code) { 
+        code = Math.floor(1000 + Math.random() * 9000).toString(); 
+        localStorage.setItem('math_tetris_save_code', code); 
+    }
+    mySaveCode = code;
 } catch (e) {}
 
 try {
@@ -270,7 +312,9 @@ try {
     }
 } catch(e) { console.error("Firebase Error", e); }
 
+// ==========================================
 // 🎮 ゲームコア変数
+// ==========================================
 const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('nextCanvas'); const nextCtx = nextCanvas.getContext('2d');
 const pCanvas = document.getElementById('particleCanvas'); const pCtx = pCanvas.getContext('2d');
@@ -283,12 +327,10 @@ let canOperate = false; let currentAnswer = NaN; let isGameOver = true;
 let problemCount = 0; let piecesPlaced = 0; 
 let currentPlayedLevel = "1"; let problemStartTime = 0; 
 let isNextHidden = false; let finalScoreToSave = 0; 
-let currentInputStr = "";
 
+let currentInputStr = "";
 let timeLimitSec = 0;
 let timerAnimFrame = null;
-
-// 💡 学習用：直近の問題を記憶して重複を防ぐ配列
 let recentProblems = [];
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -321,7 +363,13 @@ window.addEventListener('resize', () => {
     }
 });
 
-function showMathUI() { document.getElementById('math-ui').style.display = 'flex'; document.getElementById('tetris-ui').style.display = 'none'; }
+function showMathUI() { 
+    document.getElementById('math-ui').style.display = 'flex'; 
+    document.getElementById('tetris-ui').style.display = 'none'; 
+    if(!isMobile() && !isGameOver) {
+        document.getElementById('math-answer-real').focus();
+    }
+}
 function showTetrisUI() { document.getElementById('math-ui').style.display = 'none'; document.getElementById('tetris-ui').style.display = 'flex'; }
 function updateScoreDisplay() { 
     document.getElementById('score-mobile').innerText = score;
@@ -329,14 +377,14 @@ function updateScoreDisplay() {
 }
 function vibrate(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
 
-// --- オーディオ ---
+// --- オーディオ (大爆発) ---
 function initAudio() { try { if (audioCtx.state === 'suspended') audioCtx.resume(); } catch(e){} }
 
 function playExplosion(comboCount) {
     try {
         if (!audioCtx || audioCtx.state === 'suspended') return;
         const time = audioCtx.currentTime;
-        const duration = 0.6 + (Math.min(comboCount, 5) * 0.1);
+        const duration = 0.8 + (Math.min(comboCount, 5) * 0.2); 
 
         const bufferSize = audioCtx.sampleRate * duration;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
@@ -345,21 +393,22 @@ function playExplosion(comboCount) {
         const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
 
         const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1000 + (comboCount * 500), time);
+        filter.frequency.setValueAtTime(1500 + (comboCount * 500), time);
         filter.frequency.exponentialRampToValueAtTime(10, time + duration);
 
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(1.0 + (comboCount * 0.3), time); 
+        gain.gain.setValueAtTime(1.5 + (comboCount * 0.3), time); 
         gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
 
         noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
         noise.start(time);
 
-        const subOsc = audioCtx.createOscillator(); subOsc.type = 'sine';
-        subOsc.frequency.setValueAtTime(150 + (comboCount * 20), time);
+        const subOsc = audioCtx.createOscillator(); subOsc.type = 'triangle'; 
+        subOsc.frequency.setValueAtTime(120 + (comboCount * 10), time);
         subOsc.frequency.exponentialRampToValueAtTime(10, time + duration * 0.8);
         const subGain = audioCtx.createGain();
-        subGain.gain.setValueAtTime(1.5, time); subGain.gain.exponentialRampToValueAtTime(0.01, time + duration * 0.8);
+        subGain.gain.setValueAtTime(2.0, time);
+        subGain.gain.exponentialRampToValueAtTime(0.01, time + duration * 0.8);
         subOsc.connect(subGain); subGain.connect(audioCtx.destination);
         subOsc.start(time); subOsc.stop(time + duration * 0.8);
     } catch(e){}
@@ -382,9 +431,9 @@ function playHeavyMissEffect() {
         const gain = audioCtx.createGain();
         osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(100, time);
         osc2.type = 'square'; osc2.frequency.setValueAtTime(106, time); 
-        gain.gain.setValueAtTime(0.8, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+        gain.gain.setValueAtTime(1.0, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.6);
         osc1.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);
-        osc1.start(time); osc2.start(time); osc1.stop(time + 0.5); osc2.stop(time + 0.5);
+        osc1.start(time); osc2.start(time); osc1.stop(time + 0.6); osc2.stop(time + 0.6);
     } catch(e){}
 }
 
@@ -395,7 +444,7 @@ function playSound(type) {
         osc.connect(gain); gain.connect(audioCtx.destination);
         if (type === 'correct') { 
             osc.type = 'triangle'; osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.frequency.setValueAtTime(1108.73, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
             osc.start(); osc.stop(audioCtx.currentTime + 0.3);
         } else if (type === 'levelup') { 
             osc.type = 'square'; osc.frequency.setValueAtTime(440, audioCtx.currentTime); osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); osc.frequency.setValueAtTime(1760, audioCtx.currentTime + 0.3);
@@ -409,9 +458,14 @@ function playSound(type) {
     } catch(e){}
 }
 
-// --- 入力処理 (全デバイス統一) ---
+// --- 入力処理 ---
 function updateInputDisplay() {
-    document.getElementById('math-input-display').innerText = currentInputStr + "_";
+    if(isMobile()){
+        document.getElementById('math-input-display').style.display = 'block';
+        document.getElementById('math-input-display').innerText = currentInputStr + "_";
+    } else {
+        document.getElementById('math-input-display').style.display = 'none';
+    }
 }
 
 function inputPad(val, e) {
@@ -425,19 +479,24 @@ function inputPad(val, e) {
         currentInputStr += val;
     }
     updateInputDisplay();
+    if(!isMobile()) document.getElementById('math-answer-real').value = currentInputStr;
 }
 
+document.getElementById('real-input-container').addEventListener('submit', (e) => {
+    e.preventDefault();
+    currentInputStr = document.getElementById('math-answer-real').value;
+    submitAnswer(e);
+});
+
 document.addEventListener('keydown', (e) => {
-    if (document.activeElement.id === 'dq-name') return; 
+    if (document.activeElement.id === 'dq-name' || document.activeElement.id === 'load-code-input') return; 
+    
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); 
     
     if (!isGameOver) {
-        if (!canOperate) {
-            if (e.key >= '0' && e.key <= '9') { inputPad(e.key); }
-            else if (e.key === '-' || e.key === '.') { inputPad(e.key); }
-            else if (e.key === 'Backspace') { inputPad('DEL'); }
-            else if (e.key === 'Enter') { submitAnswer(); }
-        } else {
+        if (!canOperate && !isMobile()) {
+            if (e.key === 'Enter') submitAnswer();
+        } else if (canOperate) {
             if (e.key === 'ArrowLeft') moveLeft();
             else if (e.key === 'ArrowRight') moveRight();
             else if (e.key === 'ArrowDown') dropOne();
@@ -453,12 +512,6 @@ document.getElementById('speed').addEventListener('change', (e) => {
     if (canOperate && !isGameOver && gameInterval) { clearInterval(gameInterval); gameInterval = setInterval(drop, dropSpeed); }
 });
 
-function saveLearningLog(problemStr, uAns, isCorr, timeMs) {
-    if (!db) return;
-    db.collection('learning_logs').add({ userId: userId, level: currentPlayedLevel, problem: problemStr, userAnswer: uAns, isCorrect: isCorr, timeTakenMs: timeMs, timestamp: firebase.firestore.FieldValue.serverTimestamp() }).catch(e => {});
-}
-
-// 💡 ポップアップ文字を好きな位置に出す汎用関数
 function showFloatingText(text, color, top, size) {
     let el = document.createElement('div'); 
     el.className = 'dynamic-popup'; 
@@ -471,7 +524,7 @@ function showFloatingText(text, color, top, size) {
     setTimeout(() => { if(el.parentNode) el.parentNode.removeChild(el); }, 1200);
 }
 
-// --- ⏱ タイムボーナス処理 ---
+// --- タイムボーナス ---
 function updateTimer() {
     if(canOperate || isGameOver || timeLimitSec === 0) return;
     let elapsed = Date.now() - problemStartTime;
@@ -491,35 +544,30 @@ function updateTimer() {
     }
 }
 
-// 💡 時間切れ時のペナルティ処理
 function triggerTimeoutPenalty() {
     if(timerAnimFrame) cancelAnimationFrame(timerAnimFrame);
     
     let penalty = 100 * currentSpeedLevel;
-    score = Math.max(0, score - penalty); // 0未満にはならない
+    score = Math.max(0, score - penalty); 
     updateScoreDisplay();
     
     showFloatingText(`⏱時間切れ! ➖${penalty}点`, "#f43f5e", "30%", "30px");
-    saveLearningLog(currentProblemString, null, false, timeLimitSec*1000); 
     playHeavyMissEffect();
     
     isNextHidden = true; drawNextPiece();
     document.getElementById('math-status').innerText = "PENALTY! NEXT隠滅！"; 
     document.getElementById('math-status').style.color = "#e11d48";
     
-    // すぐに次の問題へ
-    setTimeout(() => { if(!isGameOver) generateMathProblem(); }, 1000);
+    setTimeout(() => { if(!isGameOver) generateMathProblem(); }, 1200);
 }
 
-
-// --- 計算システム (重複防止機能付き) ---
+// --- 計算システム ---
 function generateMathProblem() {
     problemCount++;
     let n1, n2, symbol, answer, pStr;
     let levelToUse = document.getElementById('level').value;
     if (levelToUse === "8") levelToUse = String(Math.floor(Math.random() * 7) + 1);
     
-    // 💡 直近3回の問題と同じなら作り直す
     let attempts = 0;
     do {
         switch(levelToUse) {
@@ -540,7 +588,6 @@ function generateMathProblem() {
         attempts++;
     } while (recentProblems.includes(pStr) && attempts < 10);
     
-    // 履歴を更新
     recentProblems.push(pStr);
     if(recentProblems.length > 3) recentProblems.shift();
 
@@ -550,10 +597,14 @@ function generateMathProblem() {
     document.getElementById('math-problem').innerText = pStr; 
     problemBox.classList.remove('correct-flash', 'error-shake'); 
     
-    currentInputStr = ""; updateInputDisplay();
-    canOperate = false;
+    currentInputStr = ""; 
+    document.getElementById('math-answer-real').value = "";
+    document.getElementById('math-answer-real').disabled = false;
+    document.getElementById('answer-btn-real').disabled = false;
+    updateInputDisplay();
     
-    document.getElementById('math-status').innerText = "答えを入力してENTER！";
+    canOperate = false;
+    document.getElementById('math-status').innerText = "答えを入力してね！";
     document.getElementById('math-status').style.color = "#38bdf8";
     
     timeLimitSec = parseInt(document.getElementById('time-limit').value);
@@ -572,19 +623,26 @@ function generateMathProblem() {
 
 function submitAnswer(e) {
     if(e) e.preventDefault();
-    if (canOperate || isGameOver || currentInputStr === "") return; 
+    if (canOperate || isGameOver) return; 
+
+    let valToCheck = currentInputStr;
+    if (!isMobile()) valToCheck = document.getElementById('math-answer-real').value;
+    valToCheck = valToCheck.replace(/[０-９．]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9\-\.]/g, '');
+    
+    if (valToCheck === "") return; 
     vibrate(30); 
     
-    let numVal = parseFloat(currentInputStr); 
+    let numVal = parseFloat(valToCheck); 
     let timeTaken = Date.now() - problemStartTime;
     let problemBox = document.getElementById('problem-box');
     
     if (Math.abs(numVal - currentAnswer) < 0.0001) {
-        saveLearningLog(currentProblemString, numVal, true, timeTaken); 
         currentAnswer = NaN; canOperate = true; 
         isNextHidden = false; drawNextPiece();
         
         problemBox.classList.add('correct-flash');
+        document.getElementById('math-answer-real').disabled = true;
+        document.getElementById('answer-btn-real').disabled = true;
         
         if(timeLimitSec > 0) {
             let remain = Math.max(0, timeLimitSec * 1000 - timeTaken);
@@ -601,41 +659,31 @@ function submitAnswer(e) {
         gameInterval = setInterval(drop, dropSpeed);
         update();
     } else {
-        saveLearningLog(currentProblemString, numVal, false, timeTaken); 
         playHeavyMissEffect();
-        
-        // 💡 誤答ペナルティで減点
         let penalty = 50 * currentSpeedLevel;
-        score = Math.max(0, score - penalty);
-        updateScoreDisplay();
+        score = Math.max(0, score - penalty); updateScoreDisplay();
         showFloatingText(`❌MISS! ➖${penalty}点`, "#f43f5e", "30%", "30px");
 
-        currentInputStr = ""; updateInputDisplay();
+        currentInputStr = ""; document.getElementById('math-answer-real').value = "";
+        updateInputDisplay();
+        
         isNextHidden = true; drawNextPiece(); 
         document.getElementById('math-status').innerText = "PENALTY! NEXT隠滅！"; document.getElementById('math-status').style.color = "#e11d48";
+        if(!isMobile()) document.getElementById('math-answer-real').focus();
     }
 }
 
-// --- スワイプ＆タップ操作 ---
-let touchStartX = 0; let touchStartY = 0;
-canvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: false});
-canvas.addEventListener('touchmove', e => {
+// --- コントローラー ---
+let actionTimer = null;
+function startAction(actionFunc, e, once = false) {
+    if(e) e.preventDefault();
     if (!canOperate || isGameOver) return;
-    let touchX = e.touches[0].clientX; let touchY = e.touches[0].clientY;
-    let dx = touchX - touchStartX; let dy = touchY - touchStartY;
-    if (dx > 25) { moveRight(); touchStartX = touchX; touchStartY = touchY; vibrate(5);}
-    else if (dx < -25) { moveLeft(); touchStartX = touchX; touchStartY = touchY; vibrate(5);}
-    if (dy > 35) { dropOne(); touchStartX = touchX; touchStartY = touchY; vibrate(5);}
-}, {passive: false});
-canvas.addEventListener('touchend', e => {
-    if (!canOperate || isGameOver) return;
-    let touchEndX = e.changedTouches[0].clientX; let touchEndY = e.changedTouches[0].clientY;
-    let dx = touchEndX - touchStartX; let dy = touchEndY - touchStartY;
-    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) { rotatePiece(); vibrate(10); }
-    else if (dy > 40 && Math.abs(dx) < 20) { hardDrop(); vibrate(20); } 
-});
+    actionFunc();
+    if(!once) { if(actionTimer) clearInterval(actionTimer); actionTimer = setInterval(actionFunc, 120); }
+}
+function stopAction(e) { if(e) e.preventDefault(); if(actionTimer) clearInterval(actionTimer); }
 
-// --- パーティクル・描画処理 ---
+// --- 描画 ---
 let particles = [];
 function createParticles(x, y, colorStr, isSuper = false) {
     let count = isSuper ? 25 : 10; 
@@ -652,19 +700,12 @@ function updateParticles() {
 }
 requestAnimationFrame(updateParticles); 
 
-function showPopupText(text) {
-    let el = document.createElement('div'); el.className = 'popup-text'; el.innerText = text;
-    document.getElementById('canvas-wrapper').appendChild(el);
-    setTimeout(() => { if(el.parentNode) el.parentNode.removeChild(el); }, 1000);
-}
-
 function drawSquare(ctxToDraw, x, y, type, size = BLOCK_SIZE) {
     ctxToDraw.fillStyle = COLORS[type]; ctxToDraw.fillRect(x * size, y * size, size, size);
     ctxToDraw.strokeStyle = 'rgba(0,0,0,0.8)'; ctxToDraw.lineWidth = 1; ctxToDraw.strokeRect(x * size, y * size, size, size);
     ctxToDraw.fillStyle = 'rgba(255,255,255,0.4)'; ctxToDraw.fillRect(x * size + 2, y * size + 2, size - 4, 3);
     
-    // NEXTなどの小さいサイズ時は文字を書かない
-    if(size < 20) return;
+    if(size < 15) return;
     
     ctxToDraw.textAlign = 'center'; ctxToDraw.textBaseline = 'middle';
     if (type === 9) { ctxToDraw.fillStyle = '#fff'; ctxToDraw.font = Math.floor(size * 0.7) + 'px Arial'; ctxToDraw.fillText('★', x * size + size / 2, y * size + size / 2 + 2); } 
@@ -677,13 +718,13 @@ function drawGhost() {
     if (!currentPiece || !canOperate) return; let ghostY = currentPiece.y; while (!collideAt(currentPiece.x, ghostY + 1, currentPiece.shape)) ghostY++;
     ctx.globalAlpha = 0.2; currentPiece.shape.forEach((row, y) => { row.forEach((value, x) => { if (value) drawSquare(ctx, currentPiece.x + x, ghostY + y, currentPiece.type, BLOCK_SIZE); }); }); ctx.globalAlpha = 1.0; 
 }
-// 💡 NEXTブロックが絶対にはみ出さないようにサイズを縮小（30px -> 12px）
+// 💡 NEXTブロックがはみ出さないように縮小計算
 function drawNextPiece() {
     nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
     if (isNextHidden) { nextCtx.fillStyle = '#e11d48'; nextCtx.font = 'bold 30px Arial'; nextCtx.textAlign = 'center'; nextCtx.textBaseline = 'middle'; nextCtx.fillText('❓', nextCanvas.width/2, nextCanvas.height/2 + 3); return; }
     if(!nextPiece) return; 
     
-    const size = 12; // 縮小サイズ
+    const size = 12; 
     const w = nextPiece.shape[0].length * size;
     const h = nextPiece.shape.length * size;
     const offsetX = (nextCanvas.width - w) / 2; 
@@ -721,17 +762,9 @@ function collideAt(cx, cy, shape) {
     return false;
 }
 
-// 💡 状態のオートセーブ
-function saveGameState() {
-    if(isGameOver) { localStorage.removeItem('math_tetris_save'); return; }
-    const state = { board, score, currentPlayedLevel, currentSpeedLevel, piecesPlaced };
-    localStorage.setItem('math_tetris_save', JSON.stringify(state));
-}
-
 function merge() { 
     currentPiece.shape.forEach((row, y) => { row.forEach((value, x) => { if (value) board[currentPiece.y + y][currentPiece.x + x] = currentPiece.type; }); }); 
     piecesPlaced++;
-    saveGameState(); // 👈 オートセーブ
 }
 
 async function processChains(comboCount = 0) {
@@ -760,19 +793,19 @@ async function processChains(comboCount = 0) {
         
         playExplosion(comboCount); 
         
-        if (hasGoldTrigger) { gainedScore *= 2; triggerShake(3); vibrate(100); showPopupText("💥BOMB!"); } 
-        else if (willDestroyAllBlacks) { triggerShake(3); vibrate(100); showPopupText("CRITICAL!!"); } 
-        else { triggerShake(1); vibrate(20);}
+        if (hasGoldTrigger) { gainedScore *= 2; triggerShake(3); vibrate(100); showFloatingText("💥BOMB!", "#facc15", "40%", "40px"); } 
+        else if (willDestroyAllBlacks) { triggerShake(3); vibrate(100); showFloatingText("CRITICAL!!", "#f43f5e", "40%", "40px"); } 
+        else { triggerShake(1); vibrate(30);}
         
         if (blackBlocksDestroyed > 0) gainedScore += (blackBlocksDestroyed * 1000); 
 
         score += gainedScore; updateScoreDisplay();
         
-        // 💡 ブロック破壊スコアのPOP表示
+        // 💡 破壊スコアのPOP表示
         showFloatingText(`✨➕${gainedScore}点`, "#facc15", "60%", "30px");
         
         let displayMsg = "";
-        if (comboCount > 1) { displayMsg += `${comboCount} CHAIN!🔥 `; showPopupText(`${comboCount} CHAIN!`); }
+        if (comboCount > 1) { displayMsg += `${comboCount} CHAIN!🔥 `; showFloatingText(`${comboCount} CHAIN!`, "#facc15", "50%", "35px"); }
         if (blackBlocksDestroyed > 0) displayMsg += ` BLACK x${blackBlocksDestroyed} `;
         document.getElementById('combo-display').innerText = displayMsg;
         
@@ -783,7 +816,6 @@ async function processChains(comboCount = 0) {
         await new Promise(resolve => setTimeout(resolve, 200)); await processChains(comboCount);
     } else { 
         if(comboCount === 0) document.getElementById('combo-display').innerText = ""; 
-        saveGameState(); // 👈 オートセーブ
         spawnPiece(); 
     }
 }
@@ -793,26 +825,91 @@ function triggerShake(level) { let wrapper = document.getElementById('canvas-wra
 function drop() { if (!canOperate || isGameOver) return; if (!collideAt(currentPiece.x, currentPiece.y + 1, currentPiece.shape)) { currentPiece.y++; update(); } else { canOperate = false; merge(); processChains(); } }
 function update() { drawBoard(); drawGhost(); drawPiece(); }
 
-// --- 高感度コントローラー ---
-let actionTimer = null;
-function startAction(actionFunc, e, once = false) {
-    if(e) e.preventDefault();
-    if (!canOperate || isGameOver) return;
-    actionFunc();
-    if(!once) { if(actionTimer) clearInterval(actionTimer); actionTimer = setInterval(actionFunc, 120); }
-}
-function stopAction(e) { if(e) e.preventDefault(); if(actionTimer) clearInterval(actionTimer); }
-
 function moveLeft() { if (canOperate && !isGameOver && !collideAt(currentPiece.x - 1, currentPiece.y, currentPiece.shape)) { currentPiece.x--; update(); vibrate(5);} }
 function moveRight() { if (canOperate && !isGameOver && !collideAt(currentPiece.x + 1, currentPiece.y, currentPiece.shape)) { currentPiece.x++; update(); vibrate(5);} }
 function dropOne() { if (canOperate && !isGameOver) { drop(); vibrate(5);} }
 function rotatePiece() { if (!canOperate || isGameOver) return; const newShape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i]).reverse()); if (!collideAt(currentPiece.x, currentPiece.y, newShape)) { currentPiece.shape = newShape; update(); vibrate(10);} }
 function hardDrop() { if (!canOperate || isGameOver) return; while (!collideAt(currentPiece.x, currentPiece.y + 1, currentPiece.shape)) { currentPiece.y++; } canOperate = false; merge(); processChains(); vibrate(20);}
 
+
 // ==========================================
-// 🚀 起動・セーブロードシステム
+// 🚀 💡 クラウドセーブ ＆ 起動システム
 // ==========================================
-document.getElementById('start-btn').addEventListener('click', () => { initAudio(); closeMobileSettings(); startGame(); });
+
+// 💡 セーブして終わるボタン
+async function saveAndQuitGame() {
+    if(!db) { alert("インターネットに接続されていません。"); return; }
+    if(isGameOver || board.length === 0) return;
+    
+    if(gameInterval) clearInterval(gameInterval);
+    canOperate = false;
+
+    const state = {
+        board: JSON.stringify(board),
+        score: score,
+        currentPlayedLevel: document.getElementById('level').value,
+        currentSpeedLevel: document.getElementById('speed').value,
+        timeLimitSec: document.getElementById('time-limit').value
+    };
+
+    try {
+        await db.collection('saved_games').doc(mySaveCode).set(state);
+        document.getElementById('save-code-display').innerText = mySaveCode;
+        document.getElementById('save-modal').classList.remove('hidden');
+        closeMobileSettings();
+    } catch(e) { alert("セーブに失敗しました。"); }
+}
+
+function openLoadModal() {
+    document.getElementById('load-modal').classList.remove('hidden');
+    closeMobileSettings();
+}
+
+// 💡 クラウドからロード
+async function executeLoad() {
+    if(!db) { alert("インターネットに接続されていません。"); return; }
+    let code = document.getElementById('load-code-input').value;
+    if(!code) code = mySaveCode; 
+
+    try {
+        const doc = await db.collection('saved_games').doc(code).get();
+        if(doc.exists) {
+            initAudio();
+            const state = doc.data();
+            board = JSON.parse(state.board);
+            score = state.score;
+            
+            document.getElementById('level').value = state.currentPlayedLevel || "1";
+            document.getElementById('speed').value = state.currentSpeedLevel || "5";
+            document.getElementById('time-limit').value = state.timeLimitSec || "0";
+            
+            currentPlayedLevel = document.getElementById('level').value;
+            currentSpeedLevel = parseInt(document.getElementById('speed').value);
+            dropSpeed = Math.max(150, 2200 - (currentSpeedLevel * 200)); 
+
+            combo = 0; isGameOver = false; nextPiece = null; currentInputStr = ""; recentProblems = [];
+            updateScoreDisplay();
+            
+            document.getElementById('load-modal').classList.add('hidden');
+            document.getElementById('game-over-overlay').classList.add('hidden');
+            document.getElementById('close-settings-btn').style.display = 'block';
+            document.getElementById('save-quit-btn').style.display = 'block';
+            
+            if(gameInterval) clearInterval(gameInterval); 
+            spawnPiece(); 
+            update();
+        } else {
+            alert("パスワードがちがうか、データがありません！");
+        }
+    } catch(e) { alert("データの読み込みに失敗しました。"); }
+}
+
+
+document.getElementById('start-btn').addEventListener('click', () => { 
+    initAudio(); 
+    closeMobileSettings();
+    startGame(); 
+});
 
 function startGame() {
     board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
@@ -824,45 +921,21 @@ function startGame() {
 
     updateScoreDisplay();
     document.getElementById('combo-display').innerText = "";
+    
     document.getElementById('game-over-overlay').classList.add('hidden');
-    if(!isMobile()) document.getElementById('close-settings-btn').style.display = 'block';
+    
+    document.getElementById('close-settings-btn').style.display = 'block';
+    document.getElementById('save-quit-btn').style.display = 'block';
 
     if(gameInterval) clearInterval(gameInterval); 
     spawnPiece(); 
 }
 
-// 💡 セーブデータからの再開
-function resumeGame() {
-    const saved = localStorage.getItem('math_tetris_save');
-    if(saved) {
-        initAudio();
-        const state = JSON.parse(saved);
-        board = state.board; score = state.score; currentPlayedLevel = state.currentPlayedLevel; 
-        currentSpeedLevel = state.currentSpeedLevel; piecesPlaced = state.piecesPlaced;
-        
-        document.getElementById('level').value = currentPlayedLevel;
-        document.getElementById('speed').value = currentSpeedLevel;
-        dropSpeed = Math.max(150, 2200 - (currentSpeedLevel * 200)); 
-        
-        combo = 0; isGameOver = false; nextPiece = null; currentInputStr = "";
-        updateScoreDisplay();
-        
-        closeMobileSettings();
-        document.getElementById('game-over-overlay').classList.add('hidden');
-        if(!isMobile()) document.getElementById('close-settings-btn').style.display = 'block';
-        
-        if(gameInterval) clearInterval(gameInterval); 
-        spawnPiece(); 
-        update(); // 盤面復元
-    }
-}
-
 function gameOver() {
     isGameOver = true; if(gameInterval) clearInterval(gameInterval);
-    document.getElementById('math-status').innerText = "SYSTEM DOWN"; document.getElementById('math-status').style.color = "#ff0055";
+    document.getElementById('math-status').innerText = "ゲームオーバー"; document.getElementById('math-status').style.color = "#e11d48";
     document.getElementById('game-over-overlay').classList.remove('hidden');
-    localStorage.removeItem('math_tetris_save'); // ゲームオーバーでセーブ消去
-    document.getElementById('resume-btn').style.display = 'none';
+    document.getElementById('save-quit-btn').style.display = 'none';
     finalScoreToSave = score; checkRanking(finalScoreToSave);
 }
 
@@ -879,6 +952,7 @@ async function loadRanking() {
         boardEl.innerHTML = html || 'まだ記録がありません';
     } catch (error) { boardEl.innerHTML = 'エラー発生'; }
 }
+document.getElementById('level').addEventListener('change', () => { if(isGameOver) loadRanking(); });
 
 async function checkRanking(finalScore) {
     if (finalScore === 0 || !db) return;
@@ -897,14 +971,9 @@ function saveNameRecord() {
     }
 }
 
-// 初期化
 window.addEventListener('load', () => {
     if(!isMobile()) {
         document.getElementById('left-panel').style.display = 'flex';
-    }
-    // セーブデータがあれば「続きから遊ぶ」を表示
-    if(localStorage.getItem('math_tetris_save')) {
-        document.getElementById('resume-btn').style.display = 'block';
     }
     loadRanking();
 });
