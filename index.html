@@ -189,11 +189,13 @@
 
         #game-over-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 8px; z-index: 10; }
         
+        /* 💡 ランキング枠（スクロール対応＆なめらか設定） */
         #ranking-board { 
             flex: 1; 
             min-height: 150px;
             max-height: 250px;
             overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; /* スマホで滑らかにスクロール */
             text-align: left; 
             font-size: 14px; 
             margin-top: 10px; 
@@ -243,7 +245,6 @@
             height: 100%;
             object-fit: cover;
         }
-        /* 💡 広告マークの追加 */
         .sponsor-label {
             position: absolute;
             top: 0; left: 0;
@@ -319,7 +320,9 @@
 
             <div id="ranking-board">
                 <h3 style="color:#38bdf8; margin:0 0 5px 0; text-align:center;">🏆 トップ10</h3>
-                <div id="ranking-list" style="color:#94a3b8;">読み込み中...</div>
+                <div id="ranking-list" style="color:#94a3b8;">
+                    <div style="text-align:center; padding:10px;">読み込み中...</div>
+                </div>
             </div>
         </div>
 
@@ -419,7 +422,6 @@
 </div>
 
 <script>
-// 💡 iPhoneの音消え対策：超強力なスリープ防止＆復帰機能
 let audioUnlocked = false;
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -428,7 +430,6 @@ function unlockAndWakeAudio() {
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
-        // iPhoneでスリープを強制解除するため、一度だけ「無音」を流し込む
         if (!audioUnlocked && audioCtx) {
             const buffer = audioCtx.createBuffer(1, 1, 22050);
             const source = audioCtx.createBufferSource();
@@ -440,11 +441,9 @@ function unlockAndWakeAudio() {
     } catch(e) {}
 }
 
-// 画面のあらゆるタッチやクリックで叩き起こす
 document.addEventListener('touchstart', unlockAndWakeAudio, { passive: true });
 document.addEventListener('mousedown', unlockAndWakeAudio, { passive: true });
 document.addEventListener('keydown', unlockAndWakeAudio, { passive: true });
-// スマホがバックグラウンドから復帰した時にも叩き起こす
 document.addEventListener('visibilitychange', () => { 
     if(document.visibilityState === 'visible') unlockAndWakeAudio(); 
 });
@@ -453,7 +452,6 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preven
 let lastTouchEnd = 0;
 document.addEventListener('touchend', e => { let now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) e.preventDefault(); lastTouchEnd = now; }, { passive: false });
 
-// Firebase設定
 // 👇 ここにあなたのFirebase設定を貼り付けます 👇
 const firebaseConfig = {
   apiKey: "AIzaSyDPMTQWtywKFLKHB4wNpCqLV2BsOJedFbc",
@@ -1230,6 +1228,7 @@ function gameOver() {
 let cachedRankingHTML = '';
 let lastRankingFetchTime = 0;
 
+// 💡 修正：NaN位のバグを完全解消し、カンマ付きスコアと演出を追加！
 async function loadRanking() {
     const displayLevel = document.getElementById('level').value;
     const boardEl = document.getElementById('ranking-list');
@@ -1242,33 +1241,52 @@ async function loadRanking() {
         return;
     }
 
+    boardEl.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:10px;">読み込み中...</div>';
+
     try {
         const querySnapshot = await db.collection(`ranks_level_${displayLevel}`).orderBy("score", "desc").limit(10).get();
         let html = ''; 
+        let rankCounter = 0; // 👈 ここで順番を自分で数えることで「NaN位」を完全に阻止！
         
-        querySnapshot.forEach((doc, i) => { 
+        querySnapshot.forEach((doc) => { 
             const r = doc.data(); 
             let rankStyle = '';
-            let rankLabel = `${i+1}位`;
+            let rankLabel = `${rankCounter + 1}位`;
             
-            if(i === 0) { rankStyle = 'color: #fbbf24; font-size: 1.1em;'; rankLabel = '🥇 1位'; }
-            else if(i === 1) { rankStyle = 'color: #94a3b8; font-size: 1.05em;'; rankLabel = '🥈 2位'; }
-            else if(i === 2) { rankStyle = 'color: #b45309; font-size: 1.05em;'; rankLabel = '🥉 3位'; }
+            // トップ3にメダルと色をつける
+            if(rankCounter === 0) { rankStyle = 'color: #facc15; font-size: 1.2em; font-weight: 900;'; rankLabel = '🥇 1位'; }
+            else if(rankCounter === 1) { rankStyle = 'color: #cbd5e1; font-size: 1.1em; font-weight: bold;'; rankLabel = '🥈 2位'; }
+            else if(rankCounter === 2) { rankStyle = 'color: #b45309; font-size: 1.1em; font-weight: bold;'; rankLabel = '🥉 3位'; }
+            else { rankStyle = 'color: #e2e8f0;'; }
+
+            // 💡 AI追加：スコアをカンマ区切りで見やすくする
+            const displayScore = Number(r.score).toLocaleString();
             
             html += `<div class="rank-item" style="${rankStyle}">
                         <span class="rank-pos">${rankLabel}</span>
                         <span class="rank-name">${r.name}</span>
-                        <span class="rank-score">${r.score} 点</span>
+                        <span class="rank-score">${displayScore} 点</span>
                      </div>`; 
+            
+            rankCounter++;
         });
         
-        if(html === '') { html = '<div style="text-align:center; padding:10px;">まだ記録がありません</div>'; }
-        boardEl.innerHTML = html;
+        // 💡 AI追加：誰もプレイしていない時のワクワクするメッセージ
+        if(html === '') { 
+            html = `<div style="text-align:center; color:#fb7185; padding:20px 10px; line-height:1.5;">
+                        まだ記録がありません<br>
+                        <span style="font-size:16px; font-weight:bold; color:#facc15;">最初のトップ10になろう！</span>
+                    </div>`; 
+        }
         
+        boardEl.innerHTML = html;
         cachedRankingHTML = html;
         lastRankingFetchTime = now;
         
-    } catch (error) { boardEl.innerHTML = '<div style="text-align:center; color:#e11d48; padding:10px;">エラー発生</div>'; }
+    } catch (error) { 
+        console.error(error);
+        boardEl.innerHTML = '<div style="text-align:center; color:#e11d48; padding:10px;">ランキング取得エラー</div>'; 
+    }
 }
 
 async function checkRanking(finalScore) {
@@ -1291,7 +1309,6 @@ function saveNameRecord() {
     }
 }
 
-// 👇 ここから下がスポンサーの設定リストです 👇
 const sponsors = [
     { image: "https://via.placeholder.com/320x50/333333/888888?text=Sponsor+1", url: "https://example.com" },
     { image: "https://via.placeholder.com/320x50/333333/888888?text=Sponsor+2", url: "" },
@@ -1326,7 +1343,6 @@ function updateSponsors() {
         
         if (sp.url) {
             el.onclick = () => {
-                // 💡 AIの追加機能：広告がクリックされたらGoogleアナリティクスに証拠を残す！
                 try {
                     if(typeof firebase !== 'undefined' && firebase.analytics) {
                         firebase.analytics().logEvent('sponsor_click', { sponsor_url: sp.url });
