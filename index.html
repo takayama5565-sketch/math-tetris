@@ -91,6 +91,7 @@
         
         #combo-display { color: #facc15; font-weight: bold; font-size: 16px; text-align: center; height: 20px; margin-bottom: 5px;}
 
+        /* 💻 パソコン用レイアウト */
         @media (min-width: 800px) {
             #main-content { 
                 flex-direction: row; 
@@ -188,8 +189,33 @@
         }
 
         #game-over-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 8px; z-index: 10; }
-        #ranking-board { max-height: 150px; overflow-y: auto; text-align: left; font-size: 14px; margin-top: 15px; border-top: 2px solid #334155; padding-top: 10px;}
-        .rank-item { padding: 6px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between;}
+        
+        /* 💡 スクロール＆美しいランキング表示のCSS設定 */
+        #ranking-board { 
+            flex: 1; 
+            min-height: 150px;
+            max-height: 250px;
+            overflow-y: auto; 
+            text-align: left; 
+            font-size: 14px; 
+            margin-top: 10px; 
+            border-top: 2px solid #334155; 
+            padding-top: 10px;
+        }
+        #ranking-board::-webkit-scrollbar { width: 6px; }
+        #ranking-board::-webkit-scrollbar-track { background: #1e293b; }
+        #ranking-board::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 3px; }
+        
+        .rank-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 8px 5px; 
+            border-bottom: 1px solid #334155;
+        }
+        .rank-pos { font-weight: bold; width: 50px; flex-shrink: 0; }
+        .rank-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 10px; color: #fff;}
+        .rank-score { font-weight: bold; color: #4ade80; flex-shrink: 0; }
 
         /* スポンサー枠のレイアウト */
         #sponsor-container {
@@ -287,7 +313,7 @@
             <button class="action-btn close-btn" id="close-settings-btn" onclick="closeMobileSettings()" style="display:none;">ゲームに戻る</button>
 
             <div id="ranking-board">
-                <h3 style="color:#38bdf8; margin:0 0 5px 0; text-align:center;">トップ10</h3>
+                <h3 style="color:#38bdf8; margin:0 0 5px 0; text-align:center;">🏆 トップ10</h3>
                 <div id="ranking-list" style="color:#94a3b8;">読み込み中...</div>
             </div>
         </div>
@@ -388,6 +414,17 @@
 </div>
 
 <script>
+// 💡 iPhoneの音消え対策：画面のアクション時にスリープを解除する
+function initAudio() { 
+    try { 
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume(); 
+        }
+    } catch(e){} 
+}
+document.addEventListener('touchstart', initAudio, { passive: true });
+document.addEventListener('mousedown', initAudio, { passive: true });
+document.addEventListener('keydown', initAudio, { passive: true });
 document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 let lastTouchEnd = 0;
 document.addEventListener('touchend', e => { let now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) e.preventDefault(); lastTouchEnd = now; }, { passive: false });
@@ -449,20 +486,6 @@ let timerAnimFrame = null;
 let recentProblems = [];
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-// 💡 iPhoneの音消え対策：画面のアクション時にスリープを解除する
-function initAudio() { 
-    try { 
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume(); 
-        }
-    } catch(e){} 
-}
-// 画面をタッチしたりクリックしたりするたびにスピーカーを起こす
-document.addEventListener('touchstart', initAudio, { passive: true });
-document.addEventListener('mousedown', initAudio, { passive: true });
-document.addEventListener('keydown', initAudio, { passive: true });
-
 
 const SHAPES = [
     [], 
@@ -529,7 +552,6 @@ function updateScoreDisplay() {
     document.getElementById('score-pc-val').innerText = score;
 }
 function vibrate(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
-
 
 function playExplosion(comboCount, isBigBang = false) {
     try {
@@ -656,10 +678,26 @@ document.addEventListener('keydown', (e) => {
     }
 }, { passive: false });
 
-document.getElementById('level').addEventListener('change', (e) => { currentPlayedLevel = e.target.value; if (!canOperate && !isGameOver && problemCount > 0) generateMathProblem(); loadRanking(); });
+// 💡 ゲーム途中にレベルを変更してもそのまま続きが遊べるプログラム
+document.getElementById('level').addEventListener('change', (e) => { 
+    currentPlayedLevel = e.target.value; 
+    cachedRankingHTML = ''; 
+    loadRanking(); 
+    
+    if (!isGameOver && !canOperate && problemCount > 0) {
+        showFloatingText(`レベル ${currentPlayedLevel} に変更！`, "#4ade80", "40%", "30px");
+        generateMathProblem(); 
+    }
+});
+
 document.getElementById('speed').addEventListener('change', (e) => {
-    currentSpeedLevel = parseInt(e.target.value); dropSpeed = Math.max(150, 2200 - (currentSpeedLevel * 200));
-    if (canOperate && !isGameOver && gameInterval) { clearInterval(gameInterval); gameInterval = setInterval(drop, dropSpeed); }
+    currentSpeedLevel = parseInt(e.target.value); 
+    dropSpeed = Math.max(150, 2200 - (currentSpeedLevel * 200));
+    if (canOperate && !isGameOver && gameInterval) { 
+        clearInterval(gameInterval); 
+        gameInterval = setInterval(drop, dropSpeed); 
+        showFloatingText(`スピード ${currentSpeedLevel} に変更！`, "#facc15", "40%", "30px");
+    }
 });
 
 function showFloatingText(text, color, top, size) {
@@ -748,7 +786,14 @@ function generateMathProblem() {
             case "12": n2 = Math.floor(Math.random()*10)+1; pStr = `29 × ${n2} ＝ ?`; answer = 29 * n2; break;
             case "13": n2 = Math.floor(Math.random()*10)+1; pStr = `37 × ${n2} ＝ ?`; answer = 37 * n2; break;
             case "14": n1 = Math.floor(Math.random()*90)+10; n2 = Math.floor(Math.random()*90)+10; pStr = `${n1} × ${n2} ＝ ?`; answer = n1 * n2; break;
-            case "15": answer = Math.floor(Math.random()*90)+10; n2 = Math.floor(Math.random()*90)+10; n1 = answer * n2; pStr = `${n1} ÷ ${n2} ＝ ?`; break;
+            // 💡 Lv15: 2桁÷2桁で、必ず小数点が出ない（割り切れる）整数になるプログラム
+            case "15": 
+                answer = Math.floor(Math.random() * 8) + 2; // 答えは2〜9
+                let maxDivisor = Math.floor(99 / answer); // 割られる数が99を超えないための最大値
+                n2 = Math.floor(Math.random() * (maxDivisor - 10 + 1)) + 10; // 割る数（10〜）
+                n1 = answer * n2; // 割られる数（必ず2桁になる）
+                pStr = `${n1} ÷ ${n2} ＝ ?`; 
+                break;
         }
         attempts++;
     } while (recentProblems.includes(pStr) && attempts < 10);
@@ -1166,11 +1211,12 @@ function gameOver() {
 let cachedRankingHTML = '';
 let lastRankingFetchTime = 0;
 
+// 💡 ランキング表示部分の大改修（メダル追加・スクロール対応）
 async function loadRanking() {
     const displayLevel = document.getElementById('level').value;
     const boardEl = document.getElementById('ranking-list');
     
-    if (!db) { boardEl.innerHTML = '<span style="color:#e11d48;">※Firebase未設定</span>'; return; }
+    if (!db) { boardEl.innerHTML = '<div style="text-align:center; color:#e11d48; padding:10px;">※Firebase未設定</div>'; return; }
     
     let now = Date.now();
     if (cachedRankingHTML !== '' && (now - lastRankingFetchTime < 5 * 60 * 1000)) {
@@ -1180,19 +1226,33 @@ async function loadRanking() {
 
     try {
         const querySnapshot = await db.collection(`ranks_level_${displayLevel}`).orderBy("score", "desc").limit(10).get();
-        let html = ''; querySnapshot.forEach((doc, i) => { const r = doc.data(); html += `<div class="rank-item"><span>${i+1}位: ${r.name}</span><span>${r.score} 点</span></div>`; });
-        boardEl.innerHTML = html || 'まだ記録がありません';
+        let html = ''; 
+        
+        querySnapshot.forEach((doc, i) => { 
+            const r = doc.data(); 
+            let rankStyle = '';
+            let rankLabel = `${i+1}位`;
+            
+            // トップ3にメダルと色をつける
+            if(i === 0) { rankStyle = 'color: #fbbf24; font-size: 1.1em;'; rankLabel = '🥇 1位'; }
+            else if(i === 1) { rankStyle = 'color: #94a3b8; font-size: 1.05em;'; rankLabel = '🥈 2位'; }
+            else if(i === 2) { rankStyle = 'color: #b45309; font-size: 1.05em;'; rankLabel = '🥉 3位'; }
+            
+            html += `<div class="rank-item" style="${rankStyle}">
+                        <span class="rank-pos">${rankLabel}</span>
+                        <span class="rank-name">${r.name}</span>
+                        <span class="rank-score">${r.score} 点</span>
+                     </div>`; 
+        });
+        
+        if(html === '') { html = '<div style="text-align:center; padding:10px;">まだ記録がありません</div>'; }
+        boardEl.innerHTML = html;
         
         cachedRankingHTML = html;
         lastRankingFetchTime = now;
         
-    } catch (error) { boardEl.innerHTML = 'エラー発生'; }
+    } catch (error) { boardEl.innerHTML = '<div style="text-align:center; color:#e11d48; padding:10px;">エラー発生</div>'; }
 }
-
-document.getElementById('level').addEventListener('change', () => { 
-    cachedRankingHTML = ''; 
-    if(isGameOver) loadRanking(); 
-});
 
 async function checkRanking(finalScore) {
     if (finalScore === 0 || !db) return;
@@ -1202,6 +1262,7 @@ async function checkRanking(finalScore) {
         document.getElementById('dq-modal').classList.remove('hidden'); document.getElementById('dq-name').value = '';
     }
 }
+
 function saveNameRecord() {
     let name = document.getElementById('dq-name').value || 'ゆうしゃ';
     if(db) {
