@@ -83,7 +83,7 @@
         .action-btn { width: 100%; padding: 15px; background: #a855f7; color: #fff; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; margin-top: 5px; box-shadow: 0 4px 0 #7e22ce; cursor: pointer; transition: 0.1s;}
         .action-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #7e22ce; background: #d8b4fe; color: #581c87; }
         
-        .save-btn { background: #eab308; box-shadow: 0 4px 0 #a16207; color: #000; margin-bottom: 15px; display: none;}
+        .save-btn { background: #eab308; box-shadow: 0 4px 0 #a16207; color: #000; margin-bottom: 10px;}
         .save-btn:active { box-shadow: 0 0 0 #a16207; background: #fef08a; transform: translateY(4px); }
         
         .close-btn { background: #64748b; box-shadow: 0 4px 0 #334155; margin-top: 10px;}
@@ -189,26 +189,33 @@
 
         #game-over-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 8px; z-index: 10; }
         
+        /* 💡 ランキング枠（絶対に押し潰されないように修正） */
         #ranking-board { 
-            flex: 1; 
-            min-height: 150px;
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto; 
+            min-height: 200px; /* パソコンでもスマホでも高さを確保 */
             text-align: left; 
             font-size: 14px; 
             margin-top: 10px; 
             border-top: 2px solid #334155; 
             padding-top: 10px;
         }
-        #ranking-board::-webkit-scrollbar { width: 6px; }
-        #ranking-board::-webkit-scrollbar-track { background: #1e293b; }
-        #ranking-board::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 3px; }
+        #ranking-list {
+            flex: 1;
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
+        #ranking-list::-webkit-scrollbar { width: 6px; }
+        #ranking-list::-webkit-scrollbar-track { background: #1e293b; }
+        #ranking-list::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 3px; }
         
         .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #334155;}
         .rank-pos { font-weight: bold; width: 70px; flex-shrink: 0; white-space: nowrap; }
         .rank-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 10px; color: #fff;}
         .rank-score { font-weight: bold; color: #4ade80; flex-shrink: 0; white-space: nowrap; }
 
+        /* スポンサー枠 */
         #sponsor-container {
             flex: 0 0 60px;
             background: #000;
@@ -310,15 +317,22 @@
                 </select>
             </div>
             
-            <button class="action-btn save-btn" id="resume-btn" onclick="executeLoad()" style="display:none; margin-top:10px;">▶️ 続きから遊ぶ</button>
-            <button class="action-btn" id="start-btn" onclick="handleStartClick(event)">ゲームをはじめる</button>
-            <button class="action-btn save-btn" id="save-quit-btn" onclick="saveAndQuitGame()" style="display:none;">💾 セーブして終わる</button>
+            <div id="first-time-buttons" style="display: block;">
+                <button class="action-btn" onclick="handleStartClick(event, true)">✨ ゲームをはじめる</button>
+            </div>
+
+            <div id="continue-buttons" style="display: none;">
+                <button class="action-btn save-btn" onclick="executeLoad()" style="display:block;">▶️ 続きから遊ぶ</button>
+                <button class="action-btn" onclick="handleStartClick(event, true)" style="background:#f43f5e; box-shadow:0 4px 0 #be123c;">⚠️ 記録を消して最初から</button>
+            </div>
+
+            <button class="action-btn save-btn" id="save-quit-btn" onclick="saveAndQuitGame()" style="display:none; margin-top: 10px;">💾 セーブして終わる</button>
             <button class="action-btn close-btn" id="close-settings-btn" onclick="closeMobileSettings()" style="display:none;">ゲームに戻る</button>
 
             <div id="ranking-board">
                 <h3 style="color:#38bdf8; margin:0 0 5px 0; text-align:center;">🏆 トップ10</h3>
-                <div id="ranking-list" style="color:#94a3b8;">
-                    <div style="text-align:center; padding:10px;">読み込み中...</div>
+                <div id="ranking-list">
+                    <div style="text-align:center; padding:10px; color:#94a3b8;">読み込み中...</div>
                 </div>
             </div>
         </div>
@@ -407,46 +421,36 @@
 </div>
 
 <script>
-let audioUnlocked = false;
-let silentOsc = null;
+// 💡 iPhone音消え問題：完全対策版（画面タッチのたびに強制電源ON）
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-function unlockAndWakeAudio() {
+function forceWakeAudio() {
     try {
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
-        if (!audioUnlocked && audioCtx) {
-            const buffer = audioCtx.createBuffer(1, 1, 22050);
-            const source = audioCtx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioCtx.destination);
-            source.start(0);
-            
-            // iPhone完全対策：無音を永遠に流し続ける
-            silentOsc = audioCtx.createOscillator();
-            const silentGain = audioCtx.createGain();
-            silentGain.gain.value = 0; 
-            silentOsc.connect(silentGain);
-            silentGain.connect(audioCtx.destination);
-            silentOsc.start();
-            
-            audioUnlocked = true;
-        }
+        // iPhoneを起こすための無音の空砲を撃つ
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
     } catch(e) {}
 }
 
-document.addEventListener('touchstart', unlockAndWakeAudio, { passive: true });
-document.addEventListener('mousedown', unlockAndWakeAudio, { passive: true });
-document.addEventListener('keydown', unlockAndWakeAudio, { passive: true });
+// 画面のあらゆるアクションでスピーカーを叩き起こす
+document.body.addEventListener('touchstart', forceWakeAudio, { passive: true, capture: true });
+document.body.addEventListener('touchend', forceWakeAudio, { passive: true, capture: true });
+document.body.addEventListener('click', forceWakeAudio, { passive: true, capture: true });
 document.addEventListener('visibilitychange', () => { 
-    if(document.visibilityState === 'visible') unlockAndWakeAudio(); 
+    if(document.visibilityState === 'visible') forceWakeAudio(); 
 });
 
 document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 let lastTouchEnd = 0;
 document.addEventListener('touchend', e => { let now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) e.preventDefault(); lastTouchEnd = now; }, { passive: false });
 
+// 👇 ここにあなたのFirebase設定を貼り付けます 👇
 const firebaseConfig = {
   apiKey: "AIzaSyDPMTQWtywKFLKHB4wNpCqLV2BsOJedFbc",
   authDomain: "mathtetris-b53e6.firebaseapp.com",
@@ -1063,7 +1067,7 @@ function saveAndQuitGame() {
 function executeLoad() {
     const localSaved = localStorage.getItem('block_puzzle_save');
     if(localSaved) {
-        initAudio();
+        forceWakeAudio();
         const state = JSON.parse(localSaved);
         board = state.board || []; 
         score = state.score || 0; 
@@ -1092,15 +1096,21 @@ function executeLoad() {
     }
 }
 
-function handleStartClick() {
-    initAudio(); 
+// 💡 修正：スタート時のクリックイベントを徹底整理
+function handleStartClick(e, forceNew = false) {
+    if(e) e.preventDefault();
+    forceWakeAudio(); 
     closeMobileSettings();
     setTimeout(() => {
-        startGame();
+        startGame(forceNew);
     }, 50);
 }
 
-function startGame() {
+function startGame(forceNew = false) {
+    if(forceNew) {
+        localStorage.removeItem('block_puzzle_save');
+    }
+    
     board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
     score = 0; combo = 0; isGameOver = false; nextPiece = null; problemCount = 0; piecesPlaced = 0; currentInputStr = ""; recentProblems = [];
     
@@ -1135,10 +1145,9 @@ function gameOver() {
     localStorage.removeItem('block_puzzle_save');
     finalScoreToSave = score; checkRanking(finalScoreToSave);
     
-    document.getElementById('start-btn').innerText = "ゲームをはじめる";
-    document.getElementById('start-btn').style.background = "#a855f7";
-    document.getElementById('start-btn').style.boxShadow = "0 4px 0 #7e22ce";
-    document.getElementById('resume-btn').style.display = 'none';
+    // ゲームオーバー時は「ゲームをはじめる」ボタンだけを見せる状態に戻す
+    document.getElementById('continue-buttons').style.display = 'none';
+    document.getElementById('first-time-buttons').style.display = 'block';
 }
 
 let cachedRankingHTML = '';
@@ -1275,20 +1284,17 @@ setInterval(updateSponsors, 15000);
 window.addEventListener('load', () => {
     if(!isMobile()) {
         document.getElementById('left-panel').style.display = 'flex';
-        document.getElementById('score-pc').style.display = 'block';
     } else {
         openMobileSettings();
     }
     
+    // 💡 UI自動切り替え：セーブの有無でボタンを変える
     if(localStorage.getItem('block_puzzle_save')) {
-        document.getElementById('resume-btn').style.display = 'block';
-        document.getElementById('start-btn').innerText = "⚠️ 記録を消して最初から";
-        document.getElementById('start-btn').style.background = "#f43f5e";
-        document.getElementById('start-btn').style.boxShadow = "0 4px 0 #be123c";
+        document.getElementById('first-time-buttons').style.display = 'none';
+        document.getElementById('continue-buttons').style.display = 'block';
     } else {
-        document.getElementById('start-btn').innerText = "ゲームをはじめる";
-        document.getElementById('start-btn').style.background = "#a855f7";
-        document.getElementById('start-btn').style.boxShadow = "0 4px 0 #7e22ce";
+        document.getElementById('first-time-buttons').style.display = 'block';
+        document.getElementById('continue-buttons').style.display = 'none';
     }
     
     loadRanking();
