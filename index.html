@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ブロック計算パズル - 最終確定版 -</title>
+    <title>ブロック計算パズル - 最終リリース版 -</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics-compat.js"></script>
@@ -42,7 +42,7 @@
         #main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
         /* =========================================
-           2. パネル設計（スマホ基準）
+           2. スマホ用パネル設計
         ========================================= */
         #left-sidebar {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -131,7 +131,7 @@
         .error-shake { animation: errShake 0.4s cubic-bezier(.36,.07,.19,.97) both; background-color: #e11d48 !important; border-color: #fff !important;}
         @keyframes errShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         
-        /* 💡 超高速・邪魔にならないメガポップアップ（0.4秒） */
+        /* 💡 邪魔にならない超高速・巨大メガポップアップ（0.4秒で消滅） */
         .mega-pop { 
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.1); 
             opacity: 0; pointer-events: none; z-index: 10000; text-align: center; white-space: nowrap; 
@@ -179,9 +179,12 @@
             #right-sidebar { position: relative !important; width: 100% !important; display: flex !important; background: var(--bg-panel) !important; border: 3px solid var(--accent-pink) !important; border-radius: 12px !important; border-top: 3px solid var(--accent-pink) !important; padding: 20px !important;}
             
             #numpad, #puzzle-ui { display: none !important; }
-            .pc-score-display { display: block !important; text-align: center; margin-bottom: 30px;}
+            .pc-score-display { display: block !important; text-align: center; margin-bottom: 10px;}
             .pc-score-display span { font-size: 42px; display: block; color: var(--accent-gold); font-weight: 900; line-height: 1.2; text-shadow: 0 0 15px rgba(250,204,21,0.4);}
             
+            /* 💡 プロの視点：スクショ映えのために現在レベルを常時表示 */
+            .pc-level-display { text-align: center; font-size: 14px; font-weight: bold; color: var(--accent-blue); margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px;}
+
             .math-container { flex-direction: column; padding: 30px 10px; gap: 20px; border-width: 4px;}
             #math-problem { font-size: 40px; }
             #math-input-display { width: 100%; text-align: center; height: 60px; line-height: 60px; font-size: 36px;}
@@ -194,7 +197,7 @@
             #answer-btn-real:disabled { background: #64748b; box-shadow: none; cursor: not-allowed; }
         }
         @media (max-width: 799px) {
-            .pc-score-display, #real-input-container { display: none !important; }
+            .pc-score-display, .pc-level-display, #real-input-container { display: none !important; }
         }
     </style>
 </head>
@@ -213,7 +216,7 @@
             <button class="btn-secondary" style="background:var(--accent-blue); color:#000; box-shadow:0 4px 0 #0284c7;" onclick="UI.openTutorial()">📖 遊び方を見る</button>
 
             <div class="setting-box">
-                <label>計算のレベル</label>
+                <label>計算のレベル (即時変更)</label>
                 <select id="config-level">
                     <option value="1">Lv1: 1桁の 足し算</option>
                     <option value="2">Lv2: 1桁の 引き算</option>
@@ -234,7 +237,7 @@
                 </select>
             </div>
             <div class="setting-box">
-                <label>タイムボーナス</label>
+                <label>タイムボーナス (即時変更)</label>
                 <select id="config-time">
                     <option value="0">なし (じっくり考える)</option>
                     <option value="10">10秒以内 に答える</option>
@@ -244,7 +247,7 @@
                 </select>
             </div>
             <div class="setting-box">
-                <label>スピード</label>
+                <label>スピード (即時変更)</label>
                 <select id="config-speed">
                     <option value="1">1 (ゆっくり)</option>
                     <option value="3">3</option>
@@ -320,6 +323,7 @@
                 <span style="color:#fff; font-size:16px;">SCORE</span>
                 <span id="score-text-pc" class="super-score">0</span>
             </div>
+            <div class="pc-level-display" id="pc-current-level">Lv 1: プレイ中</div>
 
             <div id="math-ui">
                 <div class="combo-msg" id="combo-msg-text"></div>
@@ -528,7 +532,7 @@ const UI = {
             if(inputReal) { inputReal.disabled = true; btnReal.disabled = true; }
             
         } else if (this.state === 'MATH' || this.state === 'TETRIS') {
-            // 💡 PC版ではプレイ中に左パネルに「一時停止（メニュー）」ボタンを出す
+            // PC版ではプレイ中に左パネルに「一時停止（メニュー）」ボタンを出す
             if(window.innerWidth >= 800) {
                 document.getElementById('btn-group-playing').style.display = 'block';
             }
@@ -773,6 +777,11 @@ const Game = {
         CanvasSys.renderAll(this.board, null);
         
         let lv = parseInt(document.getElementById('config-level').value);
+        
+        // 💡 PC版のレベル表記を更新
+        let lvText = document.getElementById('config-level').options[document.getElementById('config-level').selectedIndex].text;
+        document.getElementById('pc-current-level').innerText = `プレイ中: ${lvText}`;
+
         let n1, n2, ans, pStr;
         if(lv === 16) lv = Math.floor(Math.random() * 15) + 1;
         
@@ -993,19 +1002,43 @@ const Game = {
     }
 };
 
-// 8. リアルタイムレベル変更（プレイ中の即時反映を完全保証）
+// 8. リアルタイム「レベル」変更（即時対応）
 document.getElementById('config-level').addEventListener('change', () => {
     Ranking.load();
     if(UI.state === 'MATH' || UI.state === 'TETRIS') {
         MathInput.answer = NaN;
+        let wasPaused = (document.getElementById('left-sidebar').classList.contains('is-active'));
+        
         Game.generateProblem(); 
         
-        // スマホでメニューを開きながら変えた場合は、メニューを閉じるまで一時停止を維持
-        if (document.getElementById('left-sidebar').classList.contains('is-active')) {
-            Game.pause();
+        // メニューを開いたままならポーズ状態に戻す
+        if (wasPaused) Game.pause();
+    }
+});
+
+// 💡 リアルタイム「タイムボーナス」＆「スピード」変更（即時対応）
+document.getElementById('config-time').addEventListener('change', () => {
+    Game.applySettings();
+    if(UI.state === 'MATH') {
+        if(Game.timerAnim) cancelAnimationFrame(Game.timerAnim);
+        if(Game.timeLimit > 0) {
+            document.getElementById('timer-bar-wrap').style.display = 'block';
+            Game.startTime = Date.now();
+            Game.updateTimer();
+        } else {
+            document.getElementById('timer-bar-wrap').style.display = 'none';
         }
     }
 });
+
+document.getElementById('config-speed').addEventListener('change', () => {
+    Game.applySettings();
+    if(UI.state === 'TETRIS' && Game.interval) {
+        clearInterval(Game.interval);
+        Game.interval = setInterval(() => Game.drop(), Game.speedMs);
+    }
+});
+
 
 // 9. ブロック操作アクション
 const Action = {
