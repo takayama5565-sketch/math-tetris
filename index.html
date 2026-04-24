@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ブロック計算パズル - 完全新生版 -</title>
+    <title>ブロック計算パズル - 確定マスター版 -</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics-compat.js"></script>
@@ -33,7 +33,7 @@
         }
 
         /* =========================================
-           2. 全体レイアウト
+           2. 全体レイアウト（頑丈なFlexbox）
         ========================================= */
         #app-container {
             display: flex; flex-direction: column;
@@ -62,11 +62,11 @@
         #left-sidebar {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.95); z-index: 100;
-            display: none; /* JSで管理 */ flex-direction: column;
-            padding: 30px 20px; box-sizing: border-box; overflow-y: auto;
+            display: none; /* 初期は非表示、JSでコントロール */
+            flex-direction: column; padding: 30px 20px; box-sizing: border-box; overflow-y: auto;
             backdrop-filter: blur(5px);
         }
-        #left-sidebar.is-active { display: flex; } /* メニューを開いた時 */
+        #left-sidebar.is-active { display: flex; }
 
         .pc-only-title { display: none; text-align: center; color: var(--accent-blue); margin: 0 0 20px; font-size: 24px; font-weight: 900;}
 
@@ -83,10 +83,9 @@
         }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         #particleCanvas { z-index: 5; pointer-events: none; }
-        
         #next-box {
             position: absolute; top: 5px; right: 5px; width: 60px; height: 60px;
-            background: rgba(0,0,0,0.8); border: 2px solid var(--accent-blue); border-radius: 8px; z-index: 6;
+            background: rgba(0,0,0,0.8); border: 2px solid var(--accent-blue); border-radius: 8px; z-index: 6; display: flex; justify-content: center; align-items: center;
         }
 
         /* 右：計算＆操作エリア（スマホでは下部） */
@@ -105,13 +104,10 @@
 
         .btn-primary { width: 100%; padding: 16px; background: #a855f7; color: #fff; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; margin-bottom: 10px; box-shadow: 0 4px 0 #7e22ce; cursor: pointer; transition: 0.1s;}
         .btn-primary:active { transform: translateY(4px); box-shadow: 0 0 0 #7e22ce; }
-        
         .btn-resume { background: var(--accent-gold); color: #000; box-shadow: 0 4px 0 #a16207;}
         .btn-resume:active { box-shadow: 0 0 0 #a16207; }
-        
         .btn-danger { background: var(--accent-pink); box-shadow: 0 4px 0 #be123c;}
         .btn-danger:active { box-shadow: 0 0 0 #be123c; }
-
         .btn-secondary { width: 100%; padding: 12px; background: var(--btn-border); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; margin-bottom: 10px; box-shadow: 0 4px 0 #334155; cursor: pointer;}
         .btn-secondary:active { transform: translateY(4px); box-shadow: 0 0 0 #334155;}
 
@@ -119,15 +115,13 @@
         #math-ui { display: flex; flex-direction: column; width: 100%; max-width: 500px; margin: 0 auto;}
         .combo-msg { text-align: center; color: var(--accent-gold); font-weight: bold; font-size: 14px; height: 20px;}
         .status-msg { text-align: center; color: var(--accent-blue); font-weight: bold; font-size: 14px; margin-bottom: 5px; height: 20px;}
-        
         .timer-bar { width: 100%; height: 6px; background: var(--btn-bg); border-radius: 3px; margin-bottom: 8px; overflow: hidden; display: none;}
         .timer-fill { height: 100%; width: 100%; background: var(--accent-green); transition: width 0.1s linear;}
-
-        .math-container { display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); border: 2px dashed var(--accent-gold); border-radius: 12px; padding: 10px; margin-bottom: 10px; transition: 0.1s;}
+        .math-container { display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); border: 2px dashed var(--accent-gold); border-radius: 12px; padding: 10px; margin-bottom: 10px;}
         .math-question { font-size: 28px; font-weight: bold; color: var(--accent-gold); letter-spacing: 2px;}
         .math-answer { font-size: 28px; font-weight: bold; color: #fff; background: var(--btn-bg); padding: 5px 15px; border-radius: 8px; min-width: 80px; text-align: right; border: 2px solid var(--btn-border); height: 45px; line-height: 45px;}
 
-        /* テンキー */
+        /* スマホ用テンキー */
         #numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 500px; margin: 0 auto;}
         .numpad-btn { background: var(--btn-bg); color: #fff; border: 2px solid var(--btn-border); border-radius: 10px; font-size: 22px; font-weight: bold; height: 48px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 0 var(--bg-dark); cursor: pointer;}
         .numpad-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--bg-dark); background: #475569; }
@@ -152,7 +146,7 @@
         .rank-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
         .rank-score { font-weight: bold; color: var(--accent-green); white-space: nowrap;}
 
-        /* アニメーション */
+        /* エフェクト・アニメーション */
         .score-pop { transform: scale(1.4); }
         .error-shake { animation: errShake 0.4s cubic-bezier(.36,.07,.19,.97) both; background-color: #e11d48 !important; border-color: #fff !important;}
         @keyframes errShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
@@ -167,28 +161,29 @@
         #overlay-gameover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 20; border-radius: 8px; }
         #overlay-gameover.is-active { display: flex; }
 
-        /* 💡 スポンサー枠（PCでも3つ並ぶように修正） */
+        /* スポンサー枠 */
         #footer-sponsor { flex: 0 0 60px; background: #000; border-top: 1px solid #333; display: flex; justify-content: center; align-items: center; gap: 10px; padding: 5px;}
         .sponsor-box { height: 100%; flex: 1; max-width: 320px; background: linear-gradient(135deg, #0f172a, #1e293b); border: 2px dashed var(--accent-gold); display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none; border-radius: 4px; position: relative; overflow: hidden;}
         .sponsor-tag { position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 8px; padding: 2px 4px; border-bottom-right-radius: 4px; z-index: 2;}
+        .sponsor-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0;}
 
         /* =========================================
-           5. PC用レイアウト（幅800px以上で完全に固定）
+           5. PC用レイアウト（幅800px以上で固定）
         ========================================= */
         @media (min-width: 800px) {
             #mobile-header { display: none !important; }
             #main-area { flex-direction: row; justify-content: center; align-items: stretch; padding: 20px; max-width: 1200px; gap: 25px; margin: 0 auto;}
             
-            /* 左メニュー（PC版は常に表示、絶対幅） */
+            /* 左：メニュー（PC版は常に表示、絶対に潰れない） */
             #left-sidebar { position: static; width: 300px; display: flex !important; flex: 0 0 300px; background: var(--bg-panel); border: 3px solid var(--accent-blue); border-radius: 12px; z-index: 1; padding: 20px; box-shadow: 0 0 20px rgba(56,189,248,0.2);}
             .pc-only-title { display: block; }
             #btn-close-menu { display: none !important; }
 
-            /* 中央パズル（可変幅） */
+            /* 中央：パズル */
             #center-game { flex: 1 1 350px; padding: 0; max-width: 450px;}
             #canvas-wrapper { width: 100%; aspect-ratio: 1/2; }
             
-            /* 右計算（PC版は絶対幅） */
+            /* 右：計算（PC版は絶対幅） */
             #right-sidebar { position: static; width: 350px; flex: 0 0 350px; background: var(--bg-panel); border: 3px solid var(--accent-pink); border-radius: 12px; justify-content: center; padding: 20px;}
             
             /* PC用の表示調整 */
@@ -200,7 +195,7 @@
             #math-problem { font-size: 40px; }
             #math-input-display { width: 100%; text-align: center; height: 60px; line-height: 60px; font-size: 36px;}
             
-            #real-input-container { display: flex; gap: 10px; width: 100%; margin-top: 10px;}
+            #real-input-container { display: flex !important; gap: 10px; width: 100%; margin-top: 10px;}
             #math-answer-real { flex: 1; padding: 15px; border-radius: 8px; font-size: 28px; text-align: center; font-weight: bold; border: 3px solid var(--btn-border); background: #fff; color: #000; width: 100%; box-sizing: border-box;}
             #answer-btn-real { width: 90px; background-color: var(--accent-blue); box-shadow: 0 5px 0 #0284c7; color: #000; font-weight: 900; font-size: 18px; border-radius: 8px; border: none; cursor: pointer;}
             #answer-btn-real:active { transform: translateY(5px); box-shadow: 0 0 0 #0284c7;}
@@ -220,7 +215,6 @@
     </div>
 
     <div id="main-area">
-        
         <div id="left-sidebar">
             <h2 class="pc-only-title">ブロック計算パズル</h2>
             
@@ -245,7 +239,6 @@
                     <option value="16">Lv16: 全部まぜまぜ (ランダム)</option>
                 </select>
             </div>
-            
             <div class="setting-box">
                 <label>タイムボーナス</label>
                 <select id="config-time">
@@ -256,9 +249,8 @@
                     <option value="3">3秒以内 (神ワザ)</option>
                 </select>
             </div>
-
             <div class="setting-box">
-                <label>ブロックのスピード</label>
+                <label>スピード</label>
                 <select id="config-speed">
                     <option value="1">1 (ゆっくり)</option>
                     <option value="3">3</option>
@@ -281,13 +273,17 @@
                 <button class="btn-primary btn-danger" onclick="Game.startNew(true)">⚠️ 最初からやり直す</button>
             </div>
 
-            <button class="btn-secondary mute-btn" id="btn-mute" onclick="AudioSys.toggleMute()">🔊 音声オン (タップで消音)</button>
+            <button class="btn-secondary" id="btn-mute" onclick="AudioSys.toggleMute()">🔊 音声オン (タップで消音)</button>
             <button class="btn-secondary" id="btn-close-menu" onclick="UI.closeMenu()" style="display:none; margin-top:0;">閉じる</button>
 
             <div class="ranking-wrapper">
                 <h3 class="ranking-title">🏆 トップ10</h3>
                 <div class="ranking-list" id="ranking-container">
                     <div style="text-align:center; padding:10px; color:#94a3b8;">読み込み中...</div>
+                </div>
+                <div style="display: flex; gap: 5px; margin-top: 10px;">
+                    <button class="btn-secondary" style="flex:1; background:#000; border-color:#333; margin:0;" onclick="Viral.shareX()">𝕏 で自慢</button>
+                    <button class="btn-secondary" style="flex:1; background:#06c755; border-color:#05a546; margin:0;" onclick="Viral.shareLINE()">LINE 送信</button>
                 </div>
             </div>
         </div>
@@ -306,7 +302,7 @@
                     </div>
                     <div style="display: flex; gap: 10px; width: 90%; margin-top:10px;">
                         <button class="btn-secondary" style="flex:1; background:#000; border-color:#333; margin:0;" onclick="Viral.shareX()">𝕏 で自慢</button>
-                        <button class="btn-secondary" style="flex:1; background:#06c755; border-color:#05a546; margin:0;" onclick="Viral.shareLINE()">LINE で送る</button>
+                        <button class="btn-secondary" style="flex:1; background:#06c755; border-color:#05a546; margin:0;" onclick="Viral.shareLINE()">LINE 送信</button>
                     </div>
                     <button class="btn-primary" style="width:90%; margin-top:20px;" onclick="UI.openMenu()">メニューにもどる</button>
                 </div>
@@ -355,11 +351,11 @@
             <div id="puzzle-ui">
                 <div class="puzzle-status">正解！ ブロックを動かそう</div>
                 <div class="puzzle-controls">
-                    <div class="ctrl-btn" onmousedown="Action.start(Action.left)" onmouseup="Action.stop()" onmouseleave="Action.stop()" ontouchstart="Action.start(Action.left, event)" ontouchend="Action.stop(event)">◀</div>
-                    <div class="ctrl-btn" onmousedown="Action.start(Action.drop)" onmouseup="Action.stop()" onmouseleave="Action.stop()" ontouchstart="Action.start(Action.drop, event)" ontouchend="Action.stop(event)">▼</div>
-                    <div class="ctrl-btn" onmousedown="Action.start(Action.rotate, true)" onmouseup="Action.stop()" ontouchstart="Action.start(Action.rotate, true, event)" ontouchend="Action.stop(event)">↻</div>
-                    <div class="ctrl-btn" onmousedown="Action.start(Action.right)" onmouseup="Action.stop()" onmouseleave="Action.stop()" ontouchstart="Action.start(Action.right, event)" ontouchend="Action.stop(event)">▶</div>
-                    <div class="ctrl-btn ctrl-btn-drop" onmousedown="Action.start(Action.hardDrop, true)" ontouchstart="Action.start(Action.hardDrop, true, event)">一気に落とす</div>
+                    <div class="ctrl-btn" onmousedown="Action.start('left')" onmouseup="Action.stop()" onmouseleave="Action.stop()" ontouchstart="Action.start('left', event)" ontouchend="Action.stop(event)">◀</div>
+                    <div class="ctrl-btn" onmousedown="Action.start('drop')" onmouseup="Action.stop()" onmouseleave="Action.stop()" ontouchstart="Action.start('drop', event)" ontouchend="Action.stop(event)">▼</div>
+                    <div class="ctrl-btn" onmousedown="Action.start('rotate', true)" onmouseup="Action.stop()" ontouchstart="Action.start('rotate', true, event)" ontouchend="Action.stop(event)">↻</div>
+                    <div class="ctrl-btn" onmousedown="Action.start('right')" onmouseup="Action.stop()" onmouseleave="Action.stop()" ontouchstart="Action.start('right', event)" ontouchend="Action.stop(event)">▶</div>
+                    <div class="ctrl-btn ctrl-btn-drop" onmousedown="Action.start('hardDrop', true)" ontouchstart="Action.start('hardDrop', true, event)">一気に落とす</div>
                 </div>
             </div>
         </div>
@@ -375,10 +371,10 @@
 
 <script>
 /* ==========================================================================
-   完全新生・状態管理ロジック
+   完全新生 JavaScript
 ========================================================================== */
 
-// --- Firebase設定（ご自身のものに書き換えてください） ---
+// 1. Firebase設定
 const firebaseConfig = {
   apiKey: "AIzaSyDPMTQWtywKFLKHB4wNpCqLV2BsOJedFbc",
   authDomain: "mathtetris-b53e6.firebaseapp.com",
@@ -396,7 +392,7 @@ try {
     if (typeof firebase.analytics === 'function') firebase.analytics();
 } catch(e) { console.error("Firebase Error", e); }
 
-// --- オーディオシステム（iOS対策完備） ---
+// 2. 音声管理（iOS無音スリープ対策）
 const AudioSys = {
     ctx: new (window.AudioContext || window.webkitAudioContext)(),
     keepAlive: null,
@@ -461,12 +457,11 @@ const AudioSys = {
     }
 };
 
-// --- 交通整理システム（UI State Machine） ---
+// 3. UIステート管理
 const UI = {
     state: 'INIT', // INIT, MATH, TETRIS, PAUSED, GAMEOVER
     
     update() {
-        // ボタンリセット
         document.getElementById('btn-group-init').style.display = 'none';
         document.getElementById('btn-group-saved').style.display = 'none';
         document.getElementById('btn-group-paused').style.display = 'none';
@@ -491,7 +486,7 @@ const UI = {
             if(window.innerWidth >= 800) {
                 document.getElementById('math-answer-real').disabled = false;
                 document.getElementById('answer-btn-real').disabled = false;
-                document.getElementById('math-answer-real').focus();
+                setTimeout(() => document.getElementById('math-answer-real').focus(), 100);
             }
             
         } else if (this.state === 'TETRIS') {
@@ -500,12 +495,8 @@ const UI = {
     },
     
     openMenu() {
-        if(this.state === 'MATH' || this.state === 'TETRIS') {
-            Game.pause();
-        }
-        if(window.innerWidth < 800) {
-            document.getElementById('left-sidebar').classList.add('is-active');
-        }
+        if(this.state === 'MATH' || this.state === 'TETRIS') Game.pause();
+        if(window.innerWidth < 800) document.getElementById('left-sidebar').classList.add('is-active');
     },
     
     closeMenu() {
@@ -521,7 +512,6 @@ const UI = {
         document.getElementById('mega-pop-main').style.color = color;
         document.getElementById('mega-pop-sub').innerText = subText;
         document.getElementById('mega-pop-sub').style.color = color;
-        
         wrap.classList.remove('play-anim');
         void wrap.offsetWidth; 
         wrap.classList.add('play-anim');
@@ -536,10 +526,9 @@ const UI = {
     }
 };
 
-// --- 計算入力システム ---
+// 4. 計算入力管理
 const MathInput = {
-    currentStr: "",
-    answer: NaN,
+    currentStr: "", answer: NaN,
     
     add(char) {
         AudioSys.wakeUp();
@@ -567,25 +556,29 @@ const MathInput = {
     submit() {
         AudioSys.wakeUp();
         if (UI.state !== 'MATH' || this.currentStr === "") return;
-        
         let numVal = parseFloat(this.currentStr);
-        if (Math.abs(numVal - this.answer) < 0.0001) {
-            Game.handleCorrect();
-        } else {
-            Game.handleMiss();
-        }
+        if (Math.abs(numVal - this.answer) < 0.0001) Game.handleCorrect();
+        else Game.handleMiss();
     }
 };
 
-// --- テトリスシステム ---
+document.addEventListener('keydown', (e) => {
+    if (UI.state !== 'MATH') return;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); 
+    if (!isNaN(MathInput.answer)) {
+        if(e.key >= '0' && e.key <= '9' || e.key === '-' || e.key === '.') MathInput.add(e.key);
+        else if(e.key === 'Backspace') MathInput.del();
+        else if(e.key === 'Enter') MathInput.submit();
+    }
+});
+
+// 5. キャンバス描画管理
 const CanvasSys = {
     canvas: document.getElementById('gameCanvas'),
     ctx: document.getElementById('gameCanvas').getContext('2d'),
     nextCtx: document.getElementById('nextCanvas').getContext('2d'),
-    pCanvas: document.getElementById('particleCanvas'),
     pCtx: document.getElementById('particleCanvas').getContext('2d'),
     particles: [],
-    
     COLORS: [ null, '#ef4444', '#06b6d4', '#22c55e', '#f97316', '#eab308', '#3b82f6', '#d946ef', '#a855f7', '#14b8a6', '#84cc16', '#f43f5e', '#10b981', '#6366f1', '#fff', '#334155' ],
     SHAPES: [ [], [[1,1,1,1]], [[2,2],[2,2]], [[0,3,3],[3,3,0]], [[4,4,0],[0,4,4]], [[5,0,0],[5,5,5]], [[0,0,6],[6,6,6]], [[0,7,0],[7,7,7]], [[8]], [[9,9]], [[10,0],[10,10]], [[11,11,11]], [[0,12,0],[12,12,12],[0,12,0]], [[13,0,13],[13,13,13]] ],
     
@@ -595,22 +588,20 @@ const CanvasSys = {
         ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(x * size + 2, y * size + 2, size - 4, 3);
         if(size < 15) return;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        if (type === 14) { ctx.fillStyle = '#fff'; ctx.font = Math.floor(size*0.7)+'px Arial'; ctx.fillText('★', x*size+size/2, y*size+size/2+2); } 
-        else if (type === 15) { ctx.fillStyle = '#fff'; ctx.font = Math.floor(size*0.8)+'px Arial'; ctx.fillText('✖', x*size+size/2, y*size+size/2+2); } 
+        if (type === 14) { ctx.fillStyle = '#fff'; ctx.font = '21px Arial'; ctx.fillText('★', x*size+size/2, y*size+size/2+2); } 
+        else if (type === 15) { ctx.fillStyle = '#fff'; ctx.font = '24px Arial'; ctx.fillText('✖', x*size+size/2, y*size+size/2+2); } 
     },
     
-    renderAll(board, currentPiece) {
+    renderAll(board, curPiece) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // Board
         for(let r=0; r<18; r++) { for(let c=0; c<9; c++) { if(board[r][c]) this.drawSquare(this.ctx, c, r, board[r][c]); } }
-        // Ghost & Piece
-        if(currentPiece && UI.state === 'TETRIS') {
-            let ghostY = currentPiece.y;
-            while (!Game.collide(currentPiece.x, ghostY + 1, currentPiece.shape)) ghostY++;
+        if(curPiece && UI.state === 'TETRIS') {
+            let ghostY = curPiece.y;
+            while (!Game.collide(curPiece.x, ghostY + 1, curPiece.shape)) ghostY++;
             this.ctx.globalAlpha = 0.2;
-            currentPiece.shape.forEach((row, y) => row.forEach((val, x) => { if(val) this.drawSquare(this.ctx, currentPiece.x + x, ghostY + y, currentPiece.type); }));
+            curPiece.shape.forEach((row, y) => row.forEach((val, x) => { if(val) this.drawSquare(this.ctx, curPiece.x + x, ghostY + y, curPiece.type); }));
             this.ctx.globalAlpha = 1.0;
-            currentPiece.shape.forEach((row, y) => row.forEach((val, x) => { if(val) this.drawSquare(this.ctx, currentPiece.x + x, currentPiece.y + y, currentPiece.type); }));
+            curPiece.shape.forEach((row, y) => row.forEach((val, x) => { if(val) this.drawSquare(this.ctx, curPiece.x + x, curPiece.y + y, curPiece.type); }));
         }
     },
     
@@ -620,6 +611,7 @@ const CanvasSys = {
         if(!nextPiece) return;
         const size = 12; const w = nextPiece.shape[0].length * size; const h = nextPiece.shape.length * size;
         const ox = (60 - w) / 2; const oy = (60 - h) / 2;
+        nextPiece.shape.forEach((row, y) => row.forEach((val, x) => { if(val) this.drawSquare(this.nextCtx, 0, 0, nextPiece.type, size); this.nextCtx.clearRect(0,0,30,30); })); // Reset
         nextPiece.shape.forEach((row, y) => row.forEach((val, x) => { if(val) {
             this.nextCtx.fillStyle = this.COLORS[nextPiece.type]; this.nextCtx.fillRect(ox + x*size, oy + y*size, size, size);
             this.nextCtx.strokeStyle = 'rgba(0,0,0,0.8)'; this.nextCtx.strokeRect(ox + x*size, oy + y*size, size, size);
@@ -638,15 +630,14 @@ const CanvasSys = {
             if (p.life <= 0) { this.particles.splice(i, 1); continue; }
             this.pCtx.globalAlpha = p.life; this.pCtx.fillStyle = p.color; this.pCtx.fillRect(p.x, p.y, p.size, p.size);
         }
-        this.pCtx.globalAlpha = 1.0;
-        requestAnimationFrame(() => this.animParticles());
+        this.pCtx.globalAlpha = 1.0; requestAnimationFrame(() => this.animParticles());
     }
 };
 requestAnimationFrame(() => CanvasSys.animParticles());
 
-// --- ゲーム制御 ---
+// 6. ゲームエンジン
 const Game = {
-    board: [], score: 0, combo: 0, mathCombo: 0,
+    board: [], score: 0, mathCombo: 0,
     interval: null, speedMs: 1000, speedLevel: 5,
     curPiece: null, nxtPiece: null, hideNext: false,
     timerAnim: null, startTime: 0, timeLimit: 0,
@@ -656,12 +647,12 @@ const Game = {
         if(forceReset) localStorage.removeItem('block_puzzle_save');
         
         this.board = Array.from({length: 18}, () => Array(9).fill(0));
-        this.score = 0; this.combo = 0; this.mathCombo = 0;
+        this.score = 0; this.mathCombo = 0;
         document.getElementById('overlay-gameover').classList.remove('is-active');
         UI.updateScore(0);
         
         this.applySettings();
-        if(window.innerWidth < 800) UI.closeMenu(); // スマホならメニューを閉じる
+        if(window.innerWidth < 800) document.getElementById('left-sidebar').classList.remove('is-active');
         
         this.nxtPiece = this.genPiece();
         this.generateProblem();
@@ -678,12 +669,12 @@ const Game = {
         document.getElementById('config-level').value = data.level || "1";
         document.getElementById('config-speed').value = data.speed || "5";
         
-        this.combo = 0; this.mathCombo = 0;
+        this.mathCombo = 0;
         document.getElementById('overlay-gameover').classList.remove('is-active');
         UI.updateScore(this.score);
         
         this.applySettings();
-        if(window.innerWidth < 800) UI.closeMenu();
+        if(window.innerWidth < 800) document.getElementById('left-sidebar').classList.remove('is-active');
         
         this.nxtPiece = this.genPiece();
         this.generateProblem();
@@ -691,17 +682,29 @@ const Game = {
     
     saveAndQuit() {
         if(this.board.length > 0) {
-            localStorage.setItem('block_puzzle_save', JSON.stringify({
-                board: this.board, score: this.score,
-                level: document.getElementById('config-level').value,
-                speed: document.getElementById('config-speed').value
-            }));
+            localStorage.setItem('block_puzzle_save', JSON.stringify({ board: this.board, score: this.score, level: document.getElementById('config-level').value, speed: document.getElementById('config-speed').value }));
         }
-        this.pause();
-        UI.state = 'INIT';
-        UI.update();
-        document.getElementById('canvas-wrapper').style.opacity = '1';
+        UI.state = 'INIT'; UI.update();
         alert("セーブ完了！次回は「続きから」で再開できます。");
+    },
+    
+    pause() {
+        if(UI.state === 'GAMEOVER' || UI.state === 'INIT') return;
+        UI.state = 'PAUSED'; UI.update();
+        if(this.interval) { clearInterval(this.interval); this.interval = null; }
+        if(this.timerAnim) { cancelAnimationFrame(this.timerAnim); this.timerAnim = null; }
+    },
+    
+    resume() {
+        UI.state = isNaN(MathInput.answer) ? 'TETRIS' : 'MATH'; UI.update();
+        if(UI.state === 'TETRIS') {
+            this.interval = setInterval(() => this.drop(), this.speedMs);
+        } else {
+            if(this.timeLimit > 0) {
+                this.startTime = Date.now() - (this.timeLimit * 1000 - parseInt(document.getElementById('timer-bar-fill').style.width || 100)/100 * this.timeLimit * 1000);
+                this.updateTimer();
+            }
+        }
     },
     
     applySettings() {
@@ -711,20 +714,19 @@ const Game = {
     },
     
     generateProblem() {
-        this.pause();
-        UI.state = 'MATH';
-        UI.update();
+        if(this.interval) { clearInterval(this.interval); this.interval = null; }
+        UI.state = 'MATH'; UI.update();
         CanvasSys.renderAll(this.board, null);
         
         let lv = parseInt(document.getElementById('config-level').value);
-        let n1, n2, pStr, ans;
+        let n1, n2, ans, pStr;
         if(lv === 16) lv = Math.floor(Math.random() * 15) + 1;
         
         switch(lv) {
             case 1: n1=Math.floor(Math.random()*9)+1; n2=Math.floor(Math.random()*9)+1; ans=n1+n2; pStr=`${n1} ＋ ${n2} = ?`; break;
             case 2: n1=Math.floor(Math.random()*90)+10; n2=Math.floor(Math.random()*90)+10; ans=n1+n2; pStr=`${n1} ＋ ${n2} = ?`; break;
             case 3: n1=Math.floor(Math.random()*9)+1; n2=Math.floor(Math.random()*9)+1; ans=n1*n2; pStr=`${n1} × ${n2} = ?`; break;
-            case 4: n1=Math.floor(Math.random()*9)+11; ans=n1*n1; pStr=`${n1} × ${n1} = ?`; break;
+            case 4: n1=Math.floor(Math.random()*9)+11; ans=n1*n1; pStr=`${n1}² = ?`; break;
             case 5: n1=Math.floor(Math.random()*90)+10; n2=Math.floor(Math.random()*9)+1; ans=n1*n2; pStr=`${n1} × ${n2} = ?`; break;
             case 6: n1=Math.floor(Math.random()*8)+2; ans=n1*n1*n1; pStr=`${n1}³ = ?`; break;
             case 7: n2=Math.floor(Math.random()*10)+1; ans=Math.round(3.14*n2*100)/100; pStr=`3.14 × ${n2} = ?`; break;
@@ -739,9 +741,7 @@ const Game = {
             default: n1=Math.floor(Math.random()*9)+1; n2=Math.floor(Math.random()*9)+1; ans=n1+n2; pStr=`${n1} ＋ ${n2} = ?`; break;
         }
 
-        MathInput.answer = ans;
-        MathInput.currentStr = "";
-        MathInput.render();
+        MathInput.answer = ans; MathInput.currentStr = ""; MathInput.render();
         document.getElementById('math-q-text').innerText = pStr;
         document.getElementById('math-status-msg').innerText = "答えを入力！";
         document.getElementById('math-status-msg').style.color = "var(--accent-blue)";
@@ -749,8 +749,7 @@ const Game = {
 
         if(this.timeLimit > 0) {
             document.getElementById('timer-bar-wrap').style.display = 'block';
-            this.startTime = Date.now();
-            this.updateTimer();
+            this.startTime = Date.now(); this.updateTimer();
         } else {
             document.getElementById('timer-bar-wrap').style.display = 'none';
         }
@@ -758,19 +757,13 @@ const Game = {
 
     updateTimer() {
         if(UI.state !== 'MATH') return;
-        let elapsed = Date.now() - this.startTime;
-        let remain = Math.max(0, this.timeLimit * 1000 - elapsed);
+        let remain = Math.max(0, this.timeLimit * 1000 - (Date.now() - this.startTime));
         let pct = (remain / (this.timeLimit * 1000)) * 100;
-        
         document.getElementById('timer-bar-fill').style.width = pct + '%';
-        if(pct < 30) document.getElementById('timer-bar-fill').style.background = '#e11d48';
-        else document.getElementById('timer-bar-fill').style.background = '#4ade80';
+        document.getElementById('timer-bar-fill').style.background = pct < 30 ? '#e11d48' : '#4ade80';
 
-        if(remain > 0) {
-            this.timerAnim = requestAnimationFrame(() => this.updateTimer());
-        } else {
-            this.handleMiss(true);
-        }
+        if(remain > 0) this.timerAnim = requestAnimationFrame(() => this.updateTimer());
+        else this.handleMiss(true);
     },
 
     handleCorrect() {
@@ -786,9 +779,7 @@ const Game = {
             if(remain > 0) pts += Math.floor((Math.floor(remain / 100) * this.speedLevel) * multi);
         }
         
-        this.score += pts;
-        UI.updateScore(this.score);
-        AudioSys.play('correct');
+        this.score += pts; UI.updateScore(this.score); AudioSys.play('correct');
         
         if(this.mathCombo >= 2) {
             document.getElementById('combo-msg-text').innerText = `🔥 ${this.mathCombo} COMBO! (x${multi})`;
@@ -800,16 +791,13 @@ const Game = {
 
         this.hideNext = false;
         
-        // 💡 ブロック落下フェーズへ移行（ここが前回消えていた重要ロジック）
-        UI.state = 'TETRIS';
-        UI.update();
-        this.curPiece = this.nxtPiece;
-        this.nxtPiece = this.genPiece();
+        // 💡 計算正解 ➡ テトリスモードへ移行し、ブロック落下スタート！
+        UI.state = 'TETRIS'; UI.update();
+        this.curPiece = this.nxtPiece; this.nxtPiece = this.genPiece();
         CanvasSys.renderNext(this.nxtPiece, this.hideNext);
         
         if (this.collide(this.curPiece.x, this.curPiece.y, this.curPiece.shape)) {
-            this.triggerGameOver();
-            return;
+            this.triggerGameOver(); return;
         }
         CanvasSys.renderAll(this.board, this.curPiece);
         this.interval = setInterval(() => this.drop(), this.speedMs);
@@ -817,24 +805,17 @@ const Game = {
 
     handleMiss(isTimeout = false) {
         if(this.timerAnim) cancelAnimationFrame(this.timerAnim);
-        this.mathCombo = 0;
-        document.getElementById('combo-msg-text').innerText = "";
+        this.mathCombo = 0; document.getElementById('combo-msg-text').innerText = "";
         
         let pen = 50 * this.speedLevel;
-        this.score = Math.max(0, this.score - pen);
-        UI.updateScore(this.score);
-        AudioSys.play('miss');
+        this.score = Math.max(0, this.score - pen); UI.updateScore(this.score); AudioSys.play('miss');
         
         document.getElementById('math-box').classList.add('error-shake');
         setTimeout(() => document.getElementById('math-box').classList.remove('error-shake'), 400);
-        
         UI.showMegaPop(isTimeout ? "TIME UP!" : "MISS...", `-${pen}`, "var(--accent-pink)");
         
-        this.hideNext = true;
-        CanvasSys.renderNext(this.nxtPiece, this.hideNext);
-        
-        document.getElementById('math-status-msg').innerText = "ペナルティ発生";
-        document.getElementById('math-status-msg').style.color = "var(--accent-pink)";
+        this.hideNext = true; CanvasSys.renderNext(this.nxtPiece, this.hideNext);
+        document.getElementById('math-status-msg').innerText = "ペナルティ発生"; document.getElementById('math-status-msg').style.color = "var(--accent-pink)";
         
         MathInput.currentStr = ""; MathInput.render();
         if(isTimeout) setTimeout(() => this.generateProblem(), 1200);
@@ -843,10 +824,8 @@ const Game = {
     genPiece() {
         const base = CanvasSys.SHAPES[Math.floor(Math.random() * 13) + 1]; 
         let type; const rand = Math.random();
-        if (rand < 1/30) type = 15; // Black
-        else if (rand < 1/30 + 1/40) type = 14; // Gold
-        else type = Math.floor(Math.random() * 13) + 1; 
-        return { shape: base, x: Math.floor(9/2)-1, y: 0, type: type }; 
+        if (rand < 1/30) type = 15; else if (rand < 1/30 + 1/40) type = 14; else type = Math.floor(Math.random() * 13) + 1; 
+        return { shape: base, x: 4, y: 0, type: type }; 
     },
 
     collide(cx, cy, shape) {
@@ -864,10 +843,9 @@ const Game = {
     drop() {
         if (UI.state !== 'TETRIS') return;
         if (!this.collide(this.curPiece.x, this.curPiece.y + 1, this.curPiece.shape)) {
-            this.curPiece.y++;
-            CanvasSys.renderAll(this.board, this.curPiece);
+            this.curPiece.y++; CanvasSys.renderAll(this.board, this.curPiece);
         } else {
-            this.pause();
+            if(this.interval) clearInterval(this.interval);
             this.merge();
         }
     },
@@ -877,32 +855,28 @@ const Game = {
             if (val) this.board[this.curPiece.y + y][this.curPiece.x + x] = this.curPiece.type;
         }));
         
-        // オートセーブ
-        localStorage.setItem('block_puzzle_save', JSON.stringify({
-            board: this.board, score: this.score,
-            level: document.getElementById('config-level').value, speed: document.getElementById('config-speed').value
-        }));
+        // 💡 1個置くたびにオートセーブ
+        localStorage.setItem('block_puzzle_save', JSON.stringify({ board: this.board, score: this.score, level: document.getElementById('config-level').value, speed: document.getElementById('config-speed').value }));
         
         this.processChains().then(() => {
-            this.generateProblem(); // パズルが終わったら再び計算フェーズへ！
+            // 💡 パズル処理完了 ➡ 次の計算問題へループ！
+            this.generateProblem(); 
         });
     },
 
     async processChains(comboCount = 0) {
         let lines = []; let hasGold = false; let blackDestroyed = 0;
         for (let r = 0; r < 18; r++) {
-            let isFull = true; let hasBlackRow = false; let hasGoldRow = false;
+            let isFull = true; let hasBlack = false; let hasG = false;
             for (let c = 0; c < 9; c++) {
                 if (!this.board[r][c]) isFull = false;
-                if (this.board[r][c] === 15) hasBlackRow = true;
-                if (this.board[r][c] === 14) hasGoldRow = true;
+                if (this.board[r][c] === 15) hasBlack = true;
+                if (this.board[r][c] === 14) hasG = true;
             }
-            if (isFull) { if (!(hasBlackRow && !hasGoldRow)) { lines.push(r); if (hasGoldRow) hasGold = true; } }
+            if (isFull) { if (!(hasBlack && !hasG)) { lines.push(r); if (hasG) hasGold = true; } }
         }
         
-        let finalLines = new Set(lines);
-        let isMassive = lines.length >= 3;
-        
+        let finalLines = new Set(lines); let isMassive = lines.length >= 3;
         if (hasGold) { lines.forEach(r => { if (this.board[r].includes(14)) { for (let i = Math.max(0, r - 2); i <= Math.min(17, r + 2); i++) finalLines.add(i); } }); }
 
         let cleared = finalLines.size; let destroyBlack = isMassive; 
@@ -916,7 +890,6 @@ const Game = {
 
             comboCount++; let multi = comboCount > 1 ? comboCount : 1;
             let pts = cleared * 100 * this.speedLevel * multi;
-            
             AudioSys.play('bonus');
             
             if (hasGold) { pts *= 2; vibrate(100); UI.showMegaPop("SUPER BOMB!!", `+${pts}`, "var(--accent-gold)"); } 
@@ -925,13 +898,11 @@ const Game = {
             else { vibrate(30); UI.showMegaPop("CLEAR!", `+${pts}`, "var(--accent-green)"); }
             
             if (blackDestroyed > 0) pts += (blackDestroyed * 1000); 
-
             this.score += pts; UI.updateScore(this.score);
             
             setTimeout(() => CanvasSys.canvas.style.backgroundColor = "#020617", 150);
 
             await new Promise(r => setTimeout(r, 300)); 
-            // 重力処理
             for (let c = 0; c < 9; c++) { let emp = 17; for (let r = 17; r >= 0; r--) { if (this.board[r][c] !== 0) { if (r !== emp) { this.board[emp][c] = this.board[r][c]; this.board[r][c] = 0; } emp--; } } }
             CanvasSys.renderAll(this.board, null);
             await new Promise(r => setTimeout(r, 200)); 
@@ -939,72 +910,41 @@ const Game = {
         }
     },
 
-    pause() {
-        UI.state = 'PAUSED';
-        if(this.interval) { clearInterval(this.interval); this.interval = null; }
-        if(this.timerAnim) { cancelAnimationFrame(this.timerAnim); this.timerAnim = null; }
-    },
-    
-    resume() {
-        UI.state = isNaN(MathInput.answer) ? 'TETRIS' : 'MATH';
-        if(UI.state === 'TETRIS') {
-            this.interval = setInterval(() => this.drop(), this.speedMs);
-        } else {
-            if(this.timeLimit > 0) {
-                this.startTime = Date.now() - (this.timeLimit * 1000 - parseInt(document.getElementById('timer-bar-fill').style.width || 100)/100 * this.timeLimit * 1000);
-                this.updateTimer();
-            }
-        }
-    },
-
     triggerGameOver() {
-        this.pause();
-        UI.state = 'GAMEOVER';
-        UI.update();
-        localStorage.removeItem('block_puzzle_save');
-        
-        let pct = 99;
-        if(this.score > 20000) pct = 1; else if(this.score > 5000) pct = 5; else if(this.score > 1000) pct = 15; else if(this.score > 100) pct = 35;
+        this.pause(); UI.state = 'GAMEOVER'; localStorage.removeItem('block_puzzle_save');
+        let pct = 99; if(this.score > 20000) pct = 1; else if(this.score > 5000) pct = 5; else if(this.score > 1000) pct = 15; else if(this.score > 100) pct = 35;
         document.getElementById('percentile-text').innerText = `上位 ${pct}％`;
         document.getElementById('overlay-gameover').classList.add('is-active');
-        
-        Ranking.save(this.score);
+        UI.update(); Ranking.save(this.score);
     }
 };
 
-// --- レベル変更時のリアルタイム反映 ---
+// --- レベル変更時の処理 ---
 document.getElementById('config-level').addEventListener('change', () => {
     Ranking.load();
+    // プレイ中なら即座に新しいレベルの問題に入れ替える
     if(UI.state === 'MATH' || UI.state === 'TETRIS') {
-        // メニューで変更された場合、次にresumeする時に問題を作り直すためにクリア
         MathInput.answer = NaN;
         Game.generateProblem();
     }
 });
 
-// --- ブロック操作システム（PCキーボード・スマホボタン両対応） ---
+// --- ブロック操作 ---
 const Action = {
     timer: null,
-    start(func, isForce = false, e) {
-        if(e) e.preventDefault();
-        AudioSys.wakeUp();
+    start(act, isForce = false, e) {
+        if(e) e.preventDefault(); AudioSys.wakeUp();
         if(UI.state !== 'TETRIS') return;
-        func();
-        if(!isForce) this.timer = setInterval(func, 120);
+        this.doAct(act); if(!isForce) this.timer = setInterval(() => this.doAct(act), 120);
     },
     stop(e) { if(e) e.preventDefault(); if(this.timer) clearInterval(this.timer); },
-    left() { if(UI.state==='TETRIS' && !Game.collide(Game.curPiece.x-1, Game.curPiece.y, Game.curPiece.shape)) { Game.curPiece.x--; CanvasSys.renderAll(Game.board, Game.curPiece); vibrate(5); } },
-    right() { if(UI.state==='TETRIS' && !Game.collide(Game.curPiece.x+1, Game.curPiece.y, Game.curPiece.shape)) { Game.curPiece.x++; CanvasSys.renderAll(Game.board, Game.curPiece); vibrate(5); } },
-    drop() { if(UI.state==='TETRIS') { Game.drop(); vibrate(5); } },
-    rotate() { 
-        if(UI.state!=='TETRIS') return; 
-        const nShape = Game.curPiece.shape[0].map((_, i) => Game.curPiece.shape.map(r => r[i]).reverse()); 
-        if(!Game.collide(Game.curPiece.x, Game.curPiece.y, nShape)) { Game.curPiece.shape = nShape; CanvasSys.renderAll(Game.board, Game.curPiece); vibrate(10); }
-    },
-    hardDrop() { 
-        if(UI.state!=='TETRIS') return; 
-        while(!Game.collide(Game.curPiece.x, Game.curPiece.y+1, Game.curPiece.shape)) Game.curPiece.y++; 
-        Game.pause(); Game.merge(); vibrate(20); 
+    doAct(act) {
+        if(UI.state !== 'TETRIS') return;
+        if(act === 'left' && !Game.collide(Game.curPiece.x-1, Game.curPiece.y, Game.curPiece.shape)) { Game.curPiece.x--; CanvasSys.renderAll(Game.board, Game.curPiece); vibrate(5); }
+        else if(act === 'right' && !Game.collide(Game.curPiece.x+1, Game.curPiece.y, Game.curPiece.shape)) { Game.curPiece.x++; CanvasSys.renderAll(Game.board, Game.curPiece); vibrate(5); }
+        else if(act === 'drop') { Game.drop(); vibrate(5); }
+        else if(act === 'rotate') { const nShape = Game.curPiece.shape[0].map((_, i) => Game.curPiece.shape.map(r => r[i]).reverse()); if(!Game.collide(Game.curPiece.x, Game.curPiece.y, nShape)) { Game.curPiece.shape = nShape; CanvasSys.renderAll(Game.board, Game.curPiece); vibrate(10); } }
+        else if(act === 'hardDrop') { while(!Game.collide(Game.curPiece.x, Game.curPiece.y+1, Game.curPiece.shape)) Game.curPiece.y++; if(Game.interval) clearInterval(Game.interval); Game.merge(); vibrate(20); }
     }
 };
 
@@ -1012,21 +952,19 @@ document.addEventListener('keydown', (e) => {
     if(UI.state !== 'TETRIS') return;
     if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); 
     AudioSys.wakeUp();
-    if (e.key === 'ArrowLeft') Action.left();
-    else if (e.key === 'ArrowRight') Action.right();
-    else if (e.key === 'ArrowDown') Action.drop();
-    else if (e.key === 'ArrowUp') Action.rotate();
-    else if (e.key === ' ') Action.hardDrop();
+    if (e.key === 'ArrowLeft') Action.doAct('left');
+    else if (e.key === 'ArrowRight') Action.doAct('right');
+    else if (e.key === 'ArrowDown') Action.doAct('drop');
+    else if (e.key === 'ArrowUp') Action.doAct('rotate');
+    else if (e.key === ' ') Action.doAct('hardDrop');
 });
 
 // --- バイラルマーケティング ---
 const Viral = {
-    getTitle() {
-        if(Game.score > 20000) return "神脳👑"; if(Game.score > 5000) return "達人🔥"; if(Game.score > 1000) return "熟練者✨"; return "挑戦者🌱";
-    },
     getText() {
         let lv = document.getElementById('config-level').options[document.getElementById('config-level').selectedIndex].text;
-        return encodeURIComponent(`【挑戦者求む🔥】\nブロック計算パズルで称号「${this.getTitle()}」を獲得！\nスコア: ${Number(Game.score).toLocaleString()}点 (レベル: ${lv})\n\n私を超えられるかな？😏👇\n#ブロック計算パズル #脳トレ`);
+        let t = Game.score > 20000 ? "神脳👑" : (Game.score > 5000 ? "達人🔥" : (Game.score > 1000 ? "熟練者✨" : "挑戦者🌱"));
+        return encodeURIComponent(`【挑戦者求む🔥】\nブロック計算パズルで称号「${t}」を獲得！\nスコア: ${Number(Game.score).toLocaleString()}点 (レベル: ${lv})\n\n私を超えられるかな？😏👇\n#ブロック計算パズル #脳トレ`);
     },
     shareX() { window.open(`https://twitter.com/intent/tweet?text=${this.getText()}&url=${encodeURIComponent(window.location.href)}`, '_blank'); },
     shareLINE() { window.open(`https://line.me/R/msg/text/?${this.getText()}%0A${encodeURIComponent(window.location.href)}`, '_blank'); }
@@ -1036,7 +974,7 @@ const Viral = {
 const Ranking = {
     async load() {
         const el = document.getElementById('ranking-container');
-        if(!db) { el.innerHTML = '<div style="text-align:center; padding:10px; color:#f43f5e;">データベース未設定</div>'; return; }
+        if(!db) { el.innerHTML = '<div style="text-align:center; padding:10px; color:#f43f5e;">Firebase未設定</div>'; return; }
         let lv = document.getElementById('config-level').value;
         el.innerHTML = '<div style="text-align:center; padding:10px; color:#94a3b8;">読込中...</div>';
         try {
@@ -1078,12 +1016,8 @@ window.addEventListener('resize', updateSponsors);
 window.addEventListener('load', () => {
     AudioSys.init();
     updateSponsors();
-    
-    // UIを初期化
     UI.state = 'INIT';
     UI.update();
-    
-    // ランキングを読み込む
     Ranking.load();
 });
 </script>
