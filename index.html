@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ブロック計算パズル - 収益化完全版 -</title>
+    <title>ブロック計算パズル - バイラル特化版 -</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics-compat.js"></script>
 
     <style>
+        /* 📱 基本リセット＆ベース設定 */
         html, body { height: 100dvh; margin: 0; padding: 0; overflow: hidden; touch-action: none; background-color: #0f172a; color: #fff; font-family: 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', 'Segoe UI', sans-serif; user-select: none; -webkit-user-select: none; }
         #app-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100vw; box-sizing: border-box; }
         
@@ -16,7 +17,7 @@
 
         #mobile-header { flex: 0 0 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: #1e293b; border-bottom: 3px solid #38bdf8; z-index: 10;}
         #mobile-header h1 { color: #38bdf8; font-size: 18px; margin: 0; font-weight: 900;}
-        .score-box { font-size: 24px; font-weight: 900; margin: 0; transition: color 0.3s, transform 0.1s;}
+        .score-box { font-size: 24px; font-weight: 900; margin: 0; transition: color 0.3s;}
         .menu-btn { background: #334155; color: #38bdf8; border: 2px solid #38bdf8; border-radius: 8px; padding: 6px 12px; font-weight: bold; cursor: pointer; }
 
         .super-score {
@@ -27,11 +28,15 @@
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
             display: inline-block;
-            transition: all 0.2s;
+            transition: transform 0.1s ease-out; /* 💡 スコアUP時のアニメーション用 */
         }
         @keyframes gradient-glow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
         .score-penalty { background: none; -webkit-text-fill-color: #ff0000; text-shadow: 0 0 20px #ff0000; transform: scale(1.3); }
+        .score-pop { transform: scale(1.3); } /* 💡 点数ゲットでポンッと大きくなる */
+
+        /* 💡 修正：スマホ用の非表示設定をPC用@mediaより【前】に移動！これでPCのスコアが消えません */
+        .pc-title, .pc-score-box, #real-input-container { display: none; }
 
         #left-panel { display: none; flex-direction: column; padding: 20px; background: #1e293b; border-radius: 12px; border: 3px solid #38bdf8; box-sizing: border-box; overflow-y: auto; flex: 1;}
         
@@ -88,9 +93,13 @@
         
         .close-btn { background: #64748b; box-shadow: 0 4px 0 #334155; margin-top: 10px;}
         .close-btn:active { background: #888; box-shadow: 0 0 0 #334155; color: #fff; transform: translateY(4px);}
+
+        .mute-btn { background: #475569; color: #fff; font-size: 14px; padding: 10px; box-shadow: 0 4px 0 #1e293b; margin-top: 5px; }
+        .mute-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #1e293b; }
         
         #combo-display { color: #facc15; font-weight: bold; font-size: 16px; text-align: center; height: 20px; margin-bottom: 5px;}
 
+        /* 💻 パソコン用レイアウト (この中でdisplay:blockにすることで必ず表示される) */
         @media (min-width: 800px) {
             #main-content { 
                 flex-direction: row; 
@@ -137,9 +146,10 @@
             
             #numpad, #t-controls { display: none !important; }
             
-            .pc-title { display: block; color: #38bdf8; font-size: 26px; text-align: center; margin: 0 0 20px 0; font-weight: 900;}
-            .close-btn { display: none; }
-            .pc-score-box { display: block; font-size: 36px; font-weight: bold; color: #fb7185; margin-bottom: 20px; text-align: center;}
+            /* 💡 ここでブロック要素として再表示させています */
+            .pc-title { display: block !important; color: #38bdf8; font-size: 26px; text-align: center; margin: 0 0 20px 0; font-weight: 900;}
+            .close-btn { display: none !important; }
+            .pc-score-box { display: block !important; font-size: 36px; font-weight: bold; color: #fb7185; margin-bottom: 20px; text-align: center;}
             
             .math-row { flex-direction: column; padding: 40px 15px; gap: 25px; border-width: 4px; background: #1e293b;}
             #math-problem { font-size: 48px; }
@@ -153,7 +163,6 @@
             #answer-btn-real:active { transform: translateY(6px); box-shadow: 0 0 0 #0284c7;}
         }
         
-        .pc-title, .pc-score-box, #real-input-container { display: none; }
         .mobile-modal { position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important; background: rgba(15,23,42,0.95) !important; z-index: 100; display: flex; justify-content: center; align-items: center; border: none !important; }
         .hidden { display: none !important; }
         
@@ -193,7 +202,7 @@
             display: flex;
             flex-direction: column;
             flex: 1 1 auto; 
-            min-height: 200px; 
+            min-height: 180px; 
             text-align: left; 
             font-size: 14px; 
             margin-top: 10px; 
@@ -333,6 +342,8 @@
                 <button class="action-btn" onclick="handleStartClick(event, true)" style="background:#f43f5e; box-shadow:0 4px 0 #be123c;">⚠️ 記録を消して最初から</button>
             </div>
 
+            <button class="action-btn mute-btn" id="mute-btn" onclick="toggleMute()">🔊 音声オン (タップで消音)</button>
+
             <button class="action-btn save-btn" id="save-quit-btn" onclick="saveAndQuitGame()" style="display:none; margin-top: 10px;">💾 セーブして終わる</button>
             <button class="action-btn close-btn" id="close-settings-btn" onclick="closeMobileSettings()" style="display:none;">ゲームに戻る</button>
 
@@ -341,6 +352,7 @@
                 <div id="ranking-list">
                     <div style="text-align:center; padding:10px; color:#94a3b8;">読み込み中...</div>
                 </div>
+                <button class="action-btn" style="background:#000; color:#fff; border:2px solid #333; box-shadow: 0 4px 0 #222; font-size:14px; padding:8px; margin-top:5px;" onclick="shareScore()">𝕏 ランキングを自慢する</button>
             </div>
         </div>
 
@@ -431,20 +443,35 @@
 </div>
 
 <script>
-// 💡 iOS音消え問題・完全最終防衛システム（The Final Fix）
+// 💡 iOS音消え問題・完全最終防衛システム
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let keepAliveOsc = null;
+let isMuted = false; // 💡 音声ミュート機能用
+
+function toggleMute() {
+    isMuted = !isMuted;
+    const btn = document.getElementById('mute-btn');
+    if (isMuted) {
+        btn.innerText = "🔇 音声オフ (タップでオン)";
+        btn.style.background = "#e11d48";
+        btn.style.boxShadow = "0 4px 0 #9f1239";
+    } else {
+        btn.innerText = "🔊 音声オン (タップで消音)";
+        btn.style.background = "#475569";
+        btn.style.boxShadow = "0 4px 0 #1e293b";
+        ensureAudioAwake();
+    }
+}
 
 function ensureAudioAwake() {
     try {
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
-        // iPhoneを起こすための継続的な無音信号（負荷はゼロに等しい）
         if (!keepAliveOsc) {
             keepAliveOsc = audioCtx.createOscillator();
             const silentNode = audioCtx.createGain();
-            silentNode.gain.value = 0; // 完全無音
+            silentNode.gain.value = 0; 
             keepAliveOsc.connect(silentNode);
             silentNode.connect(audioCtx.destination);
             keepAliveOsc.start();
@@ -452,7 +479,6 @@ function ensureAudioAwake() {
     } catch(e) {}
 }
 
-// 指が触れるたび、キーを押すたび、画面が戻るたびに「絶対に起きろ！」と命令を送る
 ['touchstart', 'touchend', 'mousedown', 'keydown'].forEach(evt => {
     document.addEventListener(evt, ensureAudioAwake, { capture: true, passive: true });
 });
@@ -607,13 +633,26 @@ function showMathUI() {
     }
 }
 function showTetrisUI() { document.getElementById('math-ui').style.display = 'none'; document.getElementById('puzzle-ui').style.display = 'flex'; }
+
+// 💡 スコアUP時のポップアニメーション処理
 function updateScoreDisplay() { 
-    document.getElementById('score-mobile').innerText = score;
-    document.getElementById('score-pc-val').innerText = score;
+    const sm = document.getElementById('score-mobile');
+    const sp = document.getElementById('score-pc-val');
+    sm.innerText = score;
+    sp.innerText = score;
+    
+    // スコアが上がったらポンッと大きくする
+    sm.classList.add('score-pop');
+    sp.classList.add('score-pop');
+    setTimeout(() => {
+        sm.classList.remove('score-pop');
+        sp.classList.remove('score-pop');
+    }, 150);
 }
 function vibrate(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
 
 function playExplosion(comboCount, isBigBang = false) {
+    if(isMuted) return; // 💡 ミュート時は鳴らさない
     ensureAudioAwake();
     try {
         if (!audioCtx || audioCtx.state === 'suspended') return;
@@ -649,7 +688,6 @@ function playExplosion(comboCount, isBigBang = false) {
 }
 
 function playHeavyMissEffect() {
-    ensureAudioAwake();
     vibrate([100, 50, 100]); 
     const probBox = document.getElementById('problem-box');
     probBox.classList.add('error-shake');
@@ -658,7 +696,9 @@ function playHeavyMissEffect() {
     const originalBg = document.body.style.backgroundColor;
     document.body.style.backgroundColor = "#880000";
     setTimeout(() => document.body.style.backgroundColor = originalBg, 150);
-
+    
+    if(isMuted) return; // 💡 ミュート時は鳴らさない
+    ensureAudioAwake();
     try {
         if (!audioCtx || audioCtx.state === 'suspended') return;
         const time = audioCtx.currentTime;
@@ -673,6 +713,7 @@ function playHeavyMissEffect() {
 }
 
 function playSound(type) {
+    if(isMuted) return; // 💡 ミュート時は鳴らさない
     ensureAudioAwake();
     try {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -1177,7 +1218,7 @@ function handleStartClick(e, isNewGame) {
     document.getElementById('math-problem').style.opacity = '1';
     
     setTimeout(() => {
-        startGame();
+        startGame(true);
     }, 50);
 }
 
@@ -1221,9 +1262,11 @@ function gameOver() {
     document.getElementById('first-time-buttons').style.display = 'block';
 }
 
-// 💡 𝕏（Twitter）でスコアをシェアしてプレイヤーを増やす機能
+// 💡 𝕏（Twitter）で挑発テキスト付きのスコアシェア（拡散機能）
 function shareScore() {
-    const shareText = encodeURIComponent(`ブロック計算パズルで ${Number(score).toLocaleString()} 点を獲得しました！\nレベル: ${currentPlayedLevel}\n\n#ブロック計算パズル #脳トレ #プログラミング\n`);
+    const lvlElement = document.getElementById('level');
+    const lvlName = lvlElement.options[lvlElement.selectedIndex].text;
+    const shareText = encodeURIComponent(`【挑戦者求む🔥】\nブロック計算パズルの「${lvlName}」で ${Number(score).toLocaleString()} 点を叩き出しました！🏆\n\n私の記録を超えられるかな？😏👇\n#ブロック計算パズル #脳トレ #挑戦者求む\n`);
     const shareUrl = encodeURIComponent(window.location.href);
     window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, '_blank');
 }
@@ -1308,7 +1351,6 @@ function saveNameRecord() {
     }
 }
 
-// 💡 修正：ご指定のメールアドレスへ直接つながる設定
 const sponsors = [
     { isRecruit: true, url: "mailto:murotsuyoshi0603@gmail.com?subject=【スポンサー応募】ブロック計算パズル" },
     { isRecruit: true, url: "mailto:murotsuyoshi0603@gmail.com?subject=【スポンサー応募】ブロック計算パズル" },
