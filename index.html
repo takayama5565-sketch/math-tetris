@@ -26,7 +26,7 @@
             user-select: none; -webkit-user-select: none;
         }
 
-        #app-container { display: flex; flex-direction: column; height: 100%; width: 100%; }
+        #app-container { display: flex; flex-direction: column; height: 100%; width: 100%; position: relative; }
 
         /* スマホヘッダー */
         #mobile-header {
@@ -131,7 +131,7 @@
         .error-shake { animation: errShake 0.4s cubic-bezier(.36,.07,.19,.97) both; background-color: #e11d48 !important; border-color: #fff !important;}
         @keyframes errShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         
-        /* 💡 メガポップアップ */
+        /* 💡 超高速メガポップアップ（0.4秒） */
         .mega-pop { 
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.1); 
             opacity: 0; pointer-events: none; z-index: 10000; text-align: center; white-space: nowrap; 
@@ -302,6 +302,19 @@
                 <canvas id="gameCanvas" width="270" height="540"></canvas>
                 <canvas id="particleCanvas" width="270" height="540"></canvas>
                 <div id="next-box"><canvas id="nextCanvas" width="100%" height="100%"></canvas></div>
+                
+                <div id="overlay-tutorial" class="overlay-screen">
+                    <h2 style="color:var(--accent-gold); margin-top:0;">📖 遊び方</h2>
+                    <div style="text-align:left; color:#fff; font-weight:bold; line-height:1.8; margin-bottom:20px; font-size:15px;">
+                        ① 計算問題を解く！<br>
+                        <span style="color:var(--accent-blue); font-size:12px;">正解するとブロックが落ちてきます。</span><br>
+                        ② ブロックを操作する！<br>
+                        <span style="color:var(--accent-green); font-size:12px;">横一列に隙間なく並べると消えます。</span><br>
+                        ③ 連続正解でコンボ！<br>
+                        <span style="color:var(--accent-pink); font-size:12px;">間違えずに解き続けると得点がUP！</span>
+                    </div>
+                    <button class="btn-primary" onclick="UI.closeTutorial()">わかった！</button>
+                </div>
             </div>
         </div>
 
@@ -312,7 +325,7 @@
             </div>
             <div class="pc-level-display" id="pc-current-level">Lv 1: プレイ中</div>
 
-            <div id="math-ui" style="display:none;">
+            <div id="math-ui">
                 <div class="combo-msg" id="combo-msg-text"></div>
                 <div class="timer-bar" id="timer-bar-wrap"><div class="timer-fill" id="timer-bar-fill"></div></div>
                 <div class="status-msg" id="math-status-msg">答えを入力してね</div>
@@ -345,7 +358,7 @@
                 </div>
             </div>
 
-            <div id="puzzle-ui" style="display:none;">
+            <div id="puzzle-ui">
                 <div class="puzzle-status">正解！ ブロックを動かそう</div>
                 <div class="puzzle-controls">
                     <div class="ctrl-btn" id="btn-ctrl-left" onmousedown="Action.start('left')" onmouseup="Action.stop()" onmouseleave="Action.stop()" ontouchstart="Action.start('left', event)" ontouchend="Action.stop(event)">◀</div>
@@ -361,22 +374,16 @@
     <div id="footer-sponsor"></div>
 </div>
 
-<div id="overlay-tutorial" class="global-overlay">
-    <div style="background:var(--bg-panel); border:3px solid var(--accent-gold); border-radius:12px; padding:30px; text-align:center; width:100%; max-width:400px; box-sizing:border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-        <h2 style="color:var(--accent-gold); margin-top:0; font-size:28px;">📖 遊び方</h2>
-        <div style="text-align:left; color:#fff; font-weight:bold; line-height:2.0; margin-bottom:25px; font-size:16px;">
-            ① 計算問題を解く！<br>
-            <span style="color:var(--accent-blue); font-size:13px; display:block; padding-left:15px; margin-bottom:5px;">正解するとブロックが落ちてきます。</span>
-            ② ブロックを操作する！<br>
-            <span style="color:var(--accent-green); font-size:13px; display:block; padding-left:15px; margin-bottom:5px;">横一列に隙間なく並べると消えます。</span>
-            ③ 連続正解でコンボ！<br>
-            <span style="color:var(--accent-pink); font-size:13px; display:block; padding-left:15px;">間違えずに解き続けると得点がUP！</span>
-        </div>
-        <button class="btn-primary" style="margin:0;" onclick="UI.closeTutorial()">わかった！</button>
+<div id="overlay-name-entry" class="global-overlay" style="z-index: 9500;">
+    <div style="background:var(--bg-panel); border:4px solid var(--accent-gold); border-radius:12px; padding:30px; text-align:center; width:100%; max-width:400px; box-sizing:border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+        <h2 style="color:var(--accent-gold); font-size:32px; margin-top:0;">大記録 達成！</h2>
+        <p style="font-size:16px; color:#fff; font-weight:bold; margin-bottom:20px;">トップ10に入りました！<br>名前を教えてください。</p>
+        <input type="text" id="player-name-input" maxlength="10" placeholder="ゆうしゃ" autocomplete="off" style="width:100%; padding:15px; font-size:24px; text-align:center; border-radius:8px; border:3px solid var(--btn-border); margin-bottom:20px; box-sizing:border-box; outline:none; font-weight:bold;">
+        <button class="btn-primary" style="margin:0;" onclick="Ranking.submitName()">記録する</button>
     </div>
 </div>
 
-<div id="overlay-gameover" class="global-overlay">
+<div id="overlay-gameover" class="global-overlay" style="z-index: 9400;">
     <div style="background:var(--bg-panel); border:4px solid var(--accent-pink); border-radius:12px; padding:30px 20px; text-align:center; width:100%; max-width:400px; box-sizing:border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
         <h2 style="color:var(--accent-pink); font-size:38px; font-weight:900; margin:0 0 15px 0;">GAME OVER</h2>
         
@@ -395,15 +402,6 @@
     </div>
 </div>
 
-<div id="overlay-name-entry" class="global-overlay" style="z-index: 9500;">
-    <div style="background:var(--bg-panel); border:4px solid var(--accent-gold); border-radius:12px; padding:30px; text-align:center; width:100%; max-width:400px; box-sizing:border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-        <h2 style="color:var(--accent-gold); font-size:32px; margin-top:0;">大記録 達成！</h2>
-        <p style="font-size:16px; color:#fff; font-weight:bold; margin-bottom:20px;">トップ10に入りました！<br>名前を教えてください。</p>
-        <input type="text" id="player-name-input" maxlength="10" placeholder="ゆうしゃ" autocomplete="off" style="width:100%; padding:15px; font-size:24px; text-align:center; border-radius:8px; border:3px solid var(--btn-border); margin-bottom:20px; box-sizing:border-box; outline:none; font-weight:bold;">
-        <button class="btn-primary" style="margin:0;" onclick="Ranking.submitName()">記録する</button>
-    </div>
-</div>
-
 <div id="mega-pop-wrapper" class="mega-pop">
     <span class="pop-main" id="mega-pop-main"></span>
     <span class="pop-sub" id="mega-pop-sub"></span>
@@ -414,7 +412,7 @@
    絶対にエラーを起こさない・完全マスターJSコード
 ========================================================================== */
 
-// 💡 ユーザー様のBitly短縮URLをシステムに完全統合しました！（もう書き換える必要はありません！）
+// 💡 ユーザー様のBitly短縮URL
 const APP_SHARE_URL = "https://bit.ly/4mQXmf6"; 
 
 // 1. 安全なシステムユーティリティ
@@ -426,7 +424,6 @@ const Sys = {
 };
 
 // 2. Firebase設定
-// ★ここだけご自身のAPIキー情報に書き換えてください（「"」などの記号は絶対に消さないでください）
 const firebaseConfig = {
   apiKey: "AIzaSyDPMTQWtywKFLKHB4wNpCqLV2BsOJedFbc",
   authDomain: "mathtetris-b53e6.firebaseapp.com",
@@ -443,23 +440,43 @@ try {
     if (typeof firebase.analytics === 'function') firebase.analytics();
 } catch(e) {}
 
-// 3. オーディオシステム
+// 3. オーディオシステム（PCの厳しい音出し制限を完全突破）
 const AudioSys = {
-    ctx: new (window.AudioContext || window.webkitAudioContext)(),
+    ctx: null,
     keepAlive: null,
     isMuted: Sys.storageGet('block_puzzle_muted') === 'true',
     
     init() {
         this.updateBtn();
-        ['touchstart', 'mousedown', 'keydown'].forEach(evt => {
-            document.addEventListener(evt, () => this.wakeUp(), { capture: true, passive: true });
-        });
+        // 💡 PC・スマホ問わず、最初の操作で確実にオーディオをアンロックする
+        const unlock = () => {
+            this.wakeUp();
+            document.removeEventListener('touchstart', unlock, { capture: true });
+            document.removeEventListener('mousedown', unlock, { capture: true });
+            document.removeEventListener('keydown', unlock, { capture: true });
+        };
+        document.addEventListener('touchstart', unlock, { capture: true, passive: true });
+        document.addEventListener('mousedown', unlock, { capture: true, passive: true });
+        document.addEventListener('keydown', unlock, { capture: true, passive: true });
     },
     wakeUp() {
         if(this.isMuted) return;
         try {
-            if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-            if (!this.keepAlive) {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume().then(() => {
+                    if (!this.keepAlive) {
+                        this.keepAlive = this.ctx.createOscillator();
+                        const silentNode = this.ctx.createGain();
+                        silentNode.gain.value = 0; 
+                        this.keepAlive.connect(silentNode);
+                        silentNode.connect(this.ctx.destination);
+                        this.keepAlive.start();
+                    }
+                });
+            } else if (!this.keepAlive) {
                 this.keepAlive = this.ctx.createOscillator();
                 const silentNode = this.ctx.createGain();
                 silentNode.gain.value = 0; 
@@ -487,7 +504,9 @@ const AudioSys = {
     },
     play(type, lineComboIndex = 0) {
         if(this.isMuted) return;
-        this.wakeUp();
+        if(!this.ctx) this.wakeUp();
+        if(!this.ctx) return;
+
         try {
             const time = this.ctx.currentTime;
             if (type === 'correct') { 
@@ -572,7 +591,6 @@ const UI = {
                 }
             } else {
                 document.getElementById('puzzle-ui').style.display = 'flex';
-                // 💡 PCバグ修正：テトリス開始時に強制的にフォーカスを外してキーボード操作を有効化する
                 if(window.innerWidth >= 800 && inputReal) {
                     inputReal.disabled = true; btnReal.disabled = true;
                     inputReal.blur(); btnReal.blur(); window.focus();
@@ -643,7 +661,7 @@ const MathInput = {
     submitPC(e) {
         if(e) e.preventDefault();
         
-        // 💡 入力後のカーソル居座りを強制排除（PCでのブロック移動不可バグを完全に防御）
+        // 💡 PCでの入力後、カーソルを強制排除して二重入力を完全ブロック
         const active = document.activeElement;
         if(active) active.blur();
         window.focus();
@@ -710,8 +728,17 @@ const CanvasSys = {
     
     animParticles() {
         this.pCtx.clearRect(0, 0, 270, 540);
+        
+        // 💡 宇宙空間のようなアンビエント・パーティクルを常時発生（高級感の演出）
+        if(Math.random() < 0.1 && (UI.state === 'MATH' || UI.state === 'TETRIS')) {
+            this.particles.push({ x: Math.random()*270, y: 540, vx: (Math.random()-0.5)*1, vy: -Math.random()*2-1, life: 0.5, color: '#ffffff', size: Math.random()*2+1 });
+        }
+
         for(let i=this.particles.length-1; i>=0; i--) {
-            let p = this.particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.8; p.life -= 0.04;
+            let p = this.particles[i]; p.x += p.vx; p.y += p.vy; 
+            if(p.vy < 0 && p.life <= 0.5) { p.life -= 0.005; } // 背景パーティクル
+            else { p.vy += 0.8; p.life -= 0.04; } // ブロック破壊パーティクル
+
             if (p.life <= 0) { this.particles.splice(i, 1); continue; }
             this.pCtx.globalAlpha = p.life; this.pCtx.fillStyle = p.color; this.pCtx.fillRect(p.x, p.y, p.size, p.size);
         }
@@ -735,6 +762,7 @@ const Game = {
         this.board = Array.from({length: 18}, () => Array(9).fill(0));
         this.score = 0; this.mathCombo = 0; this.maxCombo = 0; this.isAnimating = false;
         document.getElementById('overlay-gameover').classList.remove('is-active');
+        document.getElementById('overlay-name-entry').classList.remove('is-active');
         UI.updateScore(0);
         
         this.applySettings();
@@ -1001,6 +1029,7 @@ const Game = {
         }
     },
 
+    // 💡 確実にシェア画面を見せるためのフロー再構築
     triggerGameOver() {
         this.pause(); UI.state = 'GAMEOVER'; Sys.storageRemove('block_puzzle_save');
         
@@ -1014,25 +1043,24 @@ const Game = {
         document.getElementById('percentile-text').innerText = `Lv.${lvNum} (${title})`;
         if(nextScore) document.getElementById('next-level-text').innerText = `💡 次の称号まで あと ${nextScore - this.score} 点！`;
         else document.getElementById('next-level-text').innerText = `🎉 カンスト達成！あなたは天才です！`;
-        
         document.getElementById('max-combo-text').innerText = `今回の最大連鎖: ${this.maxCombo} コンボ！`;
 
-        document.getElementById('overlay-gameover').classList.add('is-active');
-        UI.update(); Ranking.save(this.score);
+        UI.update();
+        
+        // 💡 ランキングを確認し、ランクインなら「名前入力」へ。違うなら即「シェア画面」へ。
+        Ranking.checkAndSave(this.score);
     }
 };
 
-// 💡 リアルタイム設定変更（PAUSED中も完全に即時差し替え対応）
+// 8. リアルタイム設定変更
 document.getElementById('config-level').addEventListener('change', () => {
     Ranking.load();
     if(UI.state === 'MATH' || UI.state === 'TETRIS' || UI.state === 'PAUSED') {
         if (Game.board.length === 0) return; 
         MathInput.answer = NaN;
         let wasPaused = (UI.state === 'PAUSED');
-        
-        Game.generateProblem(); // 💡 即座に問題を作り直す
-        
-        if (wasPaused) Game.pause(); // 💡 一時停止中だった場合は再び一時停止に戻す
+        Game.generateProblem(); 
+        if (wasPaused) Game.pause(); 
     }
 });
 
@@ -1077,22 +1105,21 @@ const Action = {
     }
 };
 
-// 💡 PC操作：入力欄フォーカス除外（2重入力防止）とキーボード連動
+// 💡 テンキーレス対応＆二重入力の完全ブロック
 document.addEventListener('keydown', (e) => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
         if(UI.state === 'TETRIS' || (UI.state === 'MATH' && document.activeElement.id !== 'math-answer-real')) e.preventDefault(); 
     }
 
     if (UI.state === 'MATH') {
-        // 💡 入力欄にカーソルがある時はブラウザに任せる（2重入力を完全ブロック！）
         if (document.activeElement.id === 'math-answer-real') {
             if(e.key === 'Enter') { document.getElementById('btn-num-ent')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-ent')?.classList.remove('key-active'),100); }
             return; 
         }
         if (!isNaN(MathInput.answer)) {
             if(e.key >= '0' && e.key <= '9') { MathInput.add(e.key); document.getElementById('btn-num-'+e.key)?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-'+e.key)?.classList.remove('key-active'),100); }
-            else if(e.key === '-') { MathInput.add('-'); document.getElementById('btn-num-min')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-min')?.classList.remove('key-active'),100); }
-            else if(e.key === '.') { MathInput.add('.'); document.getElementById('btn-num-dot')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-dot')?.classList.remove('key-active'),100); }
+            else if(e.key === '-' || e.key === 'Subtract') { MathInput.add('-'); document.getElementById('btn-num-min')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-min')?.classList.remove('key-active'),100); }
+            else if(e.key === '.' || e.key === 'Decimal') { MathInput.add('.'); document.getElementById('btn-num-dot')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-dot')?.classList.remove('key-active'),100); }
             else if(e.key === 'Backspace') { MathInput.del(); document.getElementById('btn-num-del')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-del')?.classList.remove('key-active'),100); }
             else if(e.key === 'Enter') { MathInput.submitPC(); document.getElementById('btn-num-ent')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-ent')?.classList.remove('key-active'),100); }
         }
@@ -1107,6 +1134,8 @@ document.addEventListener('keydown', (e) => {
 }, { passive: false });
 
 // 10. バイラル・ランキング
+const APP_SHARE_URL = "https://bit.ly/4mQXmf6"; 
+
 const Viral = {
     getText() {
         let curLv = document.getElementById('config-level').options[document.getElementById('config-level').selectedIndex].text;
@@ -1140,31 +1169,42 @@ const Ranking = {
             el.innerHTML = html;
         } catch(e) { el.innerHTML = '<div style="text-align:center; padding:10px;">エラー</div>'; }
     },
-    async save(sc) {
-        if(sc <= 0 || !db) return;
+    
+    // 💡 フロー修正：ランクインなら名前入力へ、ランク外なら即シェア画面へ
+    async checkAndSave(sc) {
+        if(sc <= 0 || !db) {
+            document.getElementById('overlay-gameover').classList.add('is-active');
+            return;
+        }
         let lv = document.getElementById('config-level').value;
         try {
             const snap = await db.collection(`ranks_level_${lv}`).orderBy("score", "desc").limit(10).get();
             let ranks = []; snap.forEach(doc => ranks.push(doc.data().score));
             
-            // トップ10の時だけ名前を聞く
             if (ranks.length < 10 || sc > ranks[ranks.length - 1]) {
                 this.pendingScore = sc;
                 document.getElementById('player-name-input').value = '';
                 document.getElementById('overlay-name-entry').classList.add('is-active');
+            } else {
+                document.getElementById('overlay-gameover').classList.add('is-active');
             }
-        } catch(e) {}
+        } catch(e) {
+            document.getElementById('overlay-gameover').classList.add('is-active');
+        }
     },
-    // 💡 登録後に自動でランキングを開くプロの演出！
+    
+    // 💡 フロー修正：名前を入力し終えたら、絶対にシェア画面を出す！
     async submitName() {
         let lv = document.getElementById('config-level').value;
         let name = document.getElementById('player-name-input').value.trim() || 'ゆうしゃ';
         document.getElementById('overlay-name-entry').classList.remove('is-active');
+        
+        // 名前を入れたらシェア画面（結果画面）を大々的に表示！
+        document.getElementById('overlay-gameover').classList.add('is-active');
+        
         try { 
             await db.collection(`ranks_level_${lv}`).add({ name: name, score: this.pendingScore, timestamp: new Date() }); 
             this.load(); 
-            // 登録成功の快感！自動でメニューを開いて自分の順位を見せる
-            setTimeout(() => UI.openMenu(), 500);
         } catch(e){}
     }
 };
@@ -1175,7 +1215,6 @@ function updateSponsors() {
     const slots = window.innerWidth < 800 ? 1 : 3;
     for (let i = 0; i < slots; i++) {
         let el = document.createElement('a'); el.className = 'sponsor-box'; el.target = "_blank";
-        // ★ご自身のメールアドレスに変更してください
         el.href = "mailto:murotsuyoshi0603@gmail.com?subject=【スポンサー応募】ブロック計算パズル";
         el.innerHTML = `<div class="sponsor-tag">広告</div><div style="color:var(--accent-gold); font-weight:900; font-size:16px;">🌟 スポンサー大募集！</div><div style="color:#94a3b8; font-size:10px;">ここをタップして連絡</div>`;
         container.appendChild(el);
