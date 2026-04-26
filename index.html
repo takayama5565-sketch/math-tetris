@@ -11,13 +11,12 @@
     <script>
     /* ==========================================================================
        🌟【設定エリア】ここだけ書き換えてください🌟
-       ※「"」や「,」などの記号は絶対に消さないよう慎重にお願いします！
     ========================================================================== */
-    const USER_CONFIG = {
-        // 1. あなたの短縮URL（LINEやXのシェア用）
-        shareUrl: "https://bit.ly/4mQXmf6",
+    
+    // 1. あなたの短縮URL（LINEやXのシェア用）※入力済みです！
+    const APP_SHARE_URL = "https://bit.ly/4mQXmf6";
 
-        // 2. Firebaseの設定（APIキーなど）
+    // 2. Firebaseの設定（下の「const firebaseConfig = {」から「};」までを、いつも通り丸ごと上書きしてください）
 const firebaseConfig = {
   apiKey: "AIzaSyDPMTQWtywKFLKHB4wNpCqLV2BsOJedFbc",
   authDomain: "mathtetris-b53e6.firebaseapp.com",
@@ -233,8 +232,8 @@ const firebaseConfig = {
             <div class="setting-box">
                 <label>計算のレベル (即時反映)</label>
                 <select id="config-level">
-                    <option value="1">Lv1: 1桁の 足し算</option>
-                    <option value="2">Lv2: 1桁の 引き算</option>
+                    <option value="1">Lv1: 1桁の 足し算 (例: 3+5)</option>
+                    <option value="2">Lv2: 1桁の 引き算 (例: 8-3)</option>
                     <option value="3">Lv3: 1桁の かけ算 (九九)</option>
                     <option value="4">Lv4: 平方計算 (11〜19の2乗)</option>
                     <option value="5">Lv5: 2桁 × 1桁の かけ算</option>
@@ -304,6 +303,34 @@ const firebaseConfig = {
                 <canvas id="gameCanvas" width="270" height="540"></canvas>
                 <canvas id="particleCanvas" width="270" height="540"></canvas>
                 <div id="next-box"><canvas id="nextCanvas" width="100%" height="100%"></canvas></div>
+                
+                <div id="overlay-tutorial" class="overlay-screen">
+                    <h2 style="color:var(--accent-gold); margin-top:0;">📖 遊び方</h2>
+                    <div style="text-align:left; color:#fff; font-weight:bold; line-height:1.8; margin-bottom:20px; font-size:15px;">
+                        ① 計算問題を解く！<br>
+                        <span style="color:var(--accent-blue); font-size:12px;">正解するとブロックが落ちてきます。</span><br>
+                        ② ブロックを操作する！<br>
+                        <span style="color:var(--accent-green); font-size:12px;">横一列に隙間なく並べると消えます。</span><br>
+                        ③ 連続正解でコンボ！<br>
+                        <span style="color:var(--accent-pink); font-size:12px;">間違えずに解き続けると得点がUP！</span>
+                    </div>
+                    <button class="btn-primary" onclick="UI.closeTutorial()">わかった！</button>
+                </div>
+
+                <div id="overlay-gameover" class="overlay-screen">
+                    <h2 style="color:#f43f5e; font-size:36px; margin:0;">GAME OVER</h2>
+                    <div style="margin: 15px 0; padding: 15px; background: rgba(0,0,0,0.8); border: 2px dashed #facc15; border-radius: 8px; text-align: center; width:90%; box-sizing:border-box;">
+                        <span style="color:#fff; font-size:14px; font-weight:bold;">あなたの認定レベルは...</span><br>
+                        <span id="percentile-text" style="color:#facc15; font-size:28px; font-weight:900; display:block; margin:5px 0;">Lv. ?? (称号)</span>
+                        <span id="next-level-text" style="color:#4ade80; font-size:12px; font-weight:bold;">次の称号まであと ?? 点！</span>
+                        <span id="max-combo-text" style="color:#fb7185; font-size:14px; font-weight:bold; display:block; margin-top:5px;">最大連鎖: 0 コンボ</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; width: 90%; margin-top:10px;">
+                        <button class="btn-secondary" style="flex:1; background:#000; border-color:#333; margin:0;" onclick="Viral.shareX()">𝕏 で自慢</button>
+                        <button class="btn-secondary" style="flex:1; background:#06c755; border-color:#05a546; margin:0;" onclick="Viral.shareLINE()">LINE で送る</button>
+                    </div>
+                    <button class="btn-primary" style="width:90%; margin-top:20px;" onclick="UI.openMenu()">メニューにもどる</button>
+                </div>
             </div>
         </div>
 
@@ -314,7 +341,7 @@ const firebaseConfig = {
             </div>
             <div class="pc-level-display" id="pc-current-level">Lv 1: プレイ中</div>
 
-            <div id="math-ui" style="display:none;">
+            <div id="math-ui">
                 <div class="combo-msg" id="combo-msg-text"></div>
                 <div class="timer-bar" id="timer-bar-wrap"><div class="timer-fill" id="timer-bar-fill"></div></div>
                 <div class="status-msg" id="math-status-msg">答えを入力してね</div>
@@ -347,7 +374,7 @@ const firebaseConfig = {
                 </div>
             </div>
 
-            <div id="puzzle-ui" style="display:none;">
+            <div id="puzzle-ui">
                 <div class="puzzle-status">正解！ ブロックを動かそう</div>
                 <div class="puzzle-controls">
                     <div class="ctrl-btn" id="btn-ctrl-left" onmousedown="Action.start('left')" onmouseup="Action.stop()" onmouseleave="Action.stop()" ontouchstart="Action.start('left', event)" ontouchend="Action.stop(event)">◀</div>
@@ -361,40 +388,6 @@ const firebaseConfig = {
     </div>
 
     <div id="footer-sponsor"></div>
-</div>
-
-<div id="overlay-tutorial" class="global-overlay">
-    <div style="background:var(--bg-panel); border:3px solid var(--accent-gold); border-radius:12px; padding:30px; text-align:center; width:100%; max-width:400px; box-sizing:border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-        <h2 style="color:var(--accent-gold); margin-top:0; font-size:28px;">📖 遊び方</h2>
-        <div style="text-align:left; color:#fff; font-weight:bold; line-height:2.0; margin-bottom:25px; font-size:16px;">
-            ① 計算問題を解く！<br>
-            <span style="color:var(--accent-blue); font-size:13px; display:block; padding-left:15px; margin-bottom:5px;">正解するとブロックが落ちてきます。</span>
-            ② ブロックを操作する！<br>
-            <span style="color:var(--accent-green); font-size:13px; display:block; padding-left:15px; margin-bottom:5px;">横一列に隙間なく並べると消えます。</span>
-            ③ 連続正解でコンボ！<br>
-            <span style="color:var(--accent-pink); font-size:13px; display:block; padding-left:15px;">間違えずに解き続けると得点がUP！</span>
-        </div>
-        <button class="btn-primary" style="margin:0;" onclick="UI.closeTutorial()">わかった！</button>
-    </div>
-</div>
-
-<div id="overlay-gameover" class="global-overlay">
-    <div style="background:var(--bg-panel); border:4px solid var(--accent-pink); border-radius:12px; padding:30px 20px; text-align:center; width:100%; max-width:400px; box-sizing:border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-        <h2 style="color:var(--accent-pink); font-size:38px; font-weight:900; margin:0 0 15px 0;">GAME OVER</h2>
-        
-        <div style="margin: 0 0 20px 0; padding: 20px; background: rgba(0,0,0,0.8); border: 2px dashed var(--accent-gold); border-radius: 8px;">
-            <span style="color:#fff; font-size:15px; font-weight:bold;">あなたの認定レベルは...</span><br>
-            <span id="percentile-text" style="color:var(--accent-gold); font-size:30px; font-weight:900; display:block; margin:10px 0; letter-spacing:1px; text-shadow:0 0 10px rgba(250,204,21,0.5);">Lv. ?? (称号)</span>
-            <span id="next-level-text" style="color:var(--accent-green); font-size:14px; font-weight:bold; display:block; margin-top:10px;">次の称号まであと ?? 点！</span>
-            <span id="max-combo-text" style="color:#fb7185; font-size:14px; font-weight:bold; display:block; margin-top:5px;">最大連鎖: 0 コンボ</span>
-        </div>
-        
-        <div style="display: flex; gap: 10px; margin-bottom:20px;">
-            <button class="btn-secondary" style="flex:1; background:#000; border-color:#333; margin:0; padding:15px; font-size:16px;" onclick="Viral.shareX()">𝕏 で自慢</button>
-            <button class="btn-secondary" style="flex:1; background:#06c755; border-color:#05a546; margin:0; padding:15px; font-size:16px;" onclick="Viral.shareLINE()">LINE で送る</button>
-        </div>
-        <button class="btn-primary" style="margin:0;" onclick="UI.openMenu()">メニューにもどる</button>
-    </div>
 </div>
 
 <div id="overlay-name-entry" class="global-overlay" style="z-index: 9500;">
@@ -413,12 +406,12 @@ const firebaseConfig = {
 
 <script>
 /* ==========================================================================
-   🎮 ゲームメインシステム（ここから下は絶対に書き換えないでください！）
+   絶対にエラーを起こさない・完全マスターJSコード
 ========================================================================== */
 
-// 💡 エラー自己診断・保護システム
+// 💡 セーフティ機能：設定が間違っていたら赤い画面を出す
 window.addEventListener('load', () => {
-    if (typeof USER_CONFIG === 'undefined' || !document.getElementById('btn-group-playing') || !document.getElementById('overlay-name-entry')) {
+    if (typeof USER_CONFIG === 'undefined' || typeof firebaseConfig === 'undefined' || !document.getElementById('btn-group-playing') || !document.getElementById('overlay-name-entry')) {
         document.body.innerHTML = `
             <div style="padding: 40px 20px; color: white; background: #e11d48; height: 100vh; text-align: center; box-sizing: border-box; overflow-y: auto;">
                 <h1 style="font-size: 30px; font-weight: 900; margin-bottom: 20px;">⚠️ 重大なエラーを発見しました！</h1>
@@ -438,9 +431,8 @@ window.addEventListener('load', () => {
         return;
     }
 
-    // 正常ならゲームスタート
     try {
-        firebase.initializeApp(USER_CONFIG.firebase);
+        firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
         if (typeof firebase.analytics === 'function') firebase.analytics();
     } catch(e) {}
@@ -483,7 +475,9 @@ const AudioSys = {
     wakeUp() {
         if(this.isMuted) return;
         try {
-            if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
             if (this.ctx.state === 'suspended') {
                 this.ctx.resume().then(() => {
                     if (!this.keepAlive) {
@@ -743,7 +737,6 @@ const CanvasSys = {
     animParticles() {
         this.pCtx.clearRect(0, 0, 270, 540);
         
-        // 💡 高級感あふれる宇宙空間パーティクル
         if(Math.random() < 0.1 && (UI.state === 'MATH' || UI.state === 'TETRIS')) {
             this.particles.push({ x: Math.random()*270, y: 540, vx: (Math.random()-0.5)*1, vy: -Math.random()*2-1, life: 0.5, color: '#ffffff', size: Math.random()*2+1 });
         }
@@ -1055,6 +1048,7 @@ const Game = {
         document.getElementById('percentile-text').innerText = `Lv.${lvNum} (${title})`;
         if(nextScore) document.getElementById('next-level-text').innerText = `💡 次の称号まで あと ${nextScore - this.score} 点！`;
         else document.getElementById('next-level-text').innerText = `🎉 カンスト達成！あなたは天才です！`;
+        
         document.getElementById('max-combo-text').innerText = `今回の最大連鎖: ${this.maxCombo} コンボ！`;
 
         UI.update();
@@ -1062,7 +1056,6 @@ const Game = {
     }
 };
 
-// 8. リアルタイム設定変更
 document.getElementById('config-level').addEventListener('change', () => {
     Ranking.load();
     if(UI.state === 'MATH' || UI.state === 'TETRIS' || UI.state === 'PAUSED') {
@@ -1096,7 +1089,6 @@ document.getElementById('config-speed').addEventListener('change', () => {
     }
 });
 
-// 9. ブロック操作アクション
 const Action = {
     timer: null,
     start(act, isForce = false, e) {
@@ -1142,7 +1134,6 @@ document.addEventListener('keydown', (e) => {
     }
 }, { passive: false });
 
-// 10. バイラル・ランキング
 const Viral = {
     getText() {
         let curLv = document.getElementById('config-level').options[document.getElementById('config-level').selectedIndex].text;
@@ -1151,10 +1142,14 @@ const Viral = {
         return encodeURIComponent(`【挑戦者求む🔥】\nブロック計算パズルで認定「${titleInfo}」を獲得しました！\nスコア: ${Number(Game.score).toLocaleString()}点${maxComboText}\n難易度: ${curLv}\n\n私を超えられるかな？😏👇\n#ブロック計算パズル #脳トレ`);
     },
     shareX() { 
-        window.open(`https://twitter.com/intent/tweet?text=${this.getText()}&url=${encodeURIComponent(USER_CONFIG.shareUrl)}`, '_blank'); 
+        if (typeof USER_CONFIG !== 'undefined' && USER_CONFIG.shareUrl) {
+            window.open(`https://twitter.com/intent/tweet?text=${this.getText()}&url=${encodeURIComponent(USER_CONFIG.shareUrl)}`, '_blank'); 
+        }
     },
     shareLINE() { 
-        window.open(`https://line.me/R/msg/text/?${this.getText()}%0A${encodeURIComponent(USER_CONFIG.shareUrl)}`, '_blank'); 
+        if (typeof USER_CONFIG !== 'undefined' && USER_CONFIG.shareUrl) {
+            window.open(`https://line.me/R/msg/text/?${this.getText()}%0A${encodeURIComponent(USER_CONFIG.shareUrl)}`, '_blank'); 
+        }
     }
 };
 
@@ -1214,18 +1209,16 @@ const Ranking = {
 };
 
 function updateSponsors() {
-    if (typeof USER_CONFIG === 'undefined') return;
     const container = document.getElementById('footer-sponsor');
     container.innerHTML = '';
     const slots = window.innerWidth < 800 ? 1 : 3;
     for (let i = 0; i < slots; i++) {
         let el = document.createElement('a'); el.className = 'sponsor-box'; el.target = "_blank";
-        el.href = `mailto:${USER_CONFIG.email}?subject=【スポンサー応募】ブロック計算パズル`;
+        el.href = "mailto:murotsuyoshi0603@gmail.com?subject=【スポンサー応募】ブロック計算パズル";
         el.innerHTML = `<div class="sponsor-tag">広告</div><div style="color:var(--accent-gold); font-weight:900; font-size:16px;">🌟 スポンサー大募集！</div><div style="color:#94a3b8; font-size:10px;">ここをタップして連絡</div>`;
         container.appendChild(el);
     }
 }
-window.addEventListener('resize', updateSponsors);
 </script>
 </body>
 </html>
