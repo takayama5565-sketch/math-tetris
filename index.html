@@ -11,7 +11,7 @@
     <script>
     /* ==========================================================================
        🌟【設定エリア】🌟
-       ここだけを慎重に上書きしてください。記号などは消さないように！
+       ここだけを慎重に上書きしてください。記号（" や , など）は消さないように！
     ========================================================================== */
     
     // 1. 短縮URL（LINEやXのシェア用）
@@ -51,16 +51,14 @@ const firebaseConfig = {
 
         #app-container { display: flex; flex-direction: column; height: 100%; width: 100%; position: relative; }
 
+        /* スマホヘッダー */
         #mobile-header {
             flex: 0 0 55px; display: flex; justify-content: space-between; align-items: center;
             padding: 0 15px; background: var(--bg-panel); border-bottom: 2px solid var(--accent-blue);
             z-index: 50; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         #mobile-header h1 { font-size: 18px; margin: 0; color: var(--accent-blue); font-weight: 900;}
-        
-        /* 💡 1兆点対応：スマホ版スコアの文字サイズ自動縮小設定 */
         .top-score { font-size: clamp(16px, 5vw, 24px); font-weight: 900; margin: 0; color: var(--accent-gold); transition: transform 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; text-align: right;}
-        
         .menu-toggle-btn { background: var(--btn-bg); color: var(--accent-blue); border: 2px solid var(--accent-blue); border-radius: 6px; padding: 6px 12px; font-weight: bold; cursor: pointer; }
 
         #main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
@@ -149,7 +147,6 @@ const firebaseConfig = {
         .rank-row { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid var(--btn-bg);}
         .rank-pos { width: 55px; font-weight: bold; white-space: nowrap;}
         .rank-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-        /* 💡 1兆点対応：ランキングのスコア領域を調整 */
         .rank-score { font-weight: bold; color: var(--accent-green); white-space: nowrap; flex-shrink: 0; margin-left: 10px;}
 
         .score-pop { transform: scale(1.4); }
@@ -209,18 +206,19 @@ const firebaseConfig = {
             
             #numpad, #puzzle-ui { display: none !important; }
             .pc-score-display { display: block !important; text-align: center; margin-bottom: 20px;}
-            /* 💡 1兆点対応：文字サイズを自動で縮める */
             .pc-score-display span { font-size: clamp(24px, 3.5vw, 42px); display: block; color: var(--accent-gold); font-weight: 900; line-height: 1.2; text-shadow: 0 0 15px rgba(250,204,21,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
             .pc-level-display { text-align: center; font-size: 14px; font-weight: bold; color: var(--accent-blue); margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px;}
             
             .math-container { flex-direction: column; padding: 30px 10px; gap: 20px; border-width: 4px;}
             #math-problem { font-size: 40px; }
             
-            #math-input-display { width: 100%; text-align: center; height: 60px; line-height: 60px; font-size: 36px; cursor: default;}
+            /* 💡 formタグを廃止し、純粋なdivに（エンターキーのリロードバグ根絶） */
             #real-input-container { display: flex !important; gap: 10px; width: 100%; margin-top: 10px;}
-            #pc-answer-box { flex: 1; padding: 15px; border-radius: 8px; font-size: 28px; text-align: center; font-weight: bold; border: 3px solid var(--btn-border); background: #fff; color: #000; width: 100%; box-sizing: border-box; height: 64px;}
-            #answer-btn-real { width: 90px; background-color: var(--accent-blue); box-shadow: 0 5px 0 #0284c7; color: #000; font-weight: 900; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; transition: 0.1s; height: 64px;}
-            #answer-btn-real:active { transform: translateY(5px); box-shadow: 0 0 0 #0284c7;}
+            #pc-answer-box { flex: 1; padding: 15px; border-radius: 8px; font-size: 28px; text-align: center; font-weight: bold; border: 3px solid var(--btn-border); background: #fff; color: #000; width: 100%; box-sizing: border-box; height: 64px; display:flex; align-items:center; justify-content:center; cursor: default;}
+            
+            /* 💡 PC用エンターキーと連動するボタンのアニメーション設定 */
+            #answer-btn-real { width: 120px; background-color: var(--accent-blue); box-shadow: 0 5px 0 #0284c7; color: #000; font-weight: 900; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; transition: 0.1s; height: 64px;}
+            #answer-btn-real:active, .key-active-btn { transform: translateY(5px) !important; box-shadow: 0 0 0 #0284c7 !important; background-color: var(--accent-blue) !important;}
         }
         @media (max-width: 799px) {
             .pc-score-display, .pc-level-display, #real-input-container { display: none !important; }
@@ -244,8 +242,8 @@ const firebaseConfig = {
             <div class="setting-box">
                 <label>レベル (即時反映)</label>
                 <select id="config-level">
-                    <option value="1">Lv1: 1桁の 足し算</option>
-                    <option value="2">Lv2: 1桁の 引き算</option>
+                    <option value="1">Lv1: 1桁の 足し算 (例: 3+5)</option>
+                    <option value="2">Lv2: 1桁の 引き算 (例: 8-3)</option>
                     <option value="3">Lv3: 1桁の かけ算 (九九)</option>
                     <option value="4">Lv4: 平方計算 (11〜19の2乗)</option>
                     <option value="5">Lv5: 2桁 × 1桁の かけ算</option>
@@ -338,7 +336,7 @@ const firebaseConfig = {
                 
                 <div id="real-input-container">
                     <div id="pc-answer-box">_</div>
-                    <button id="answer-btn-real" onclick="MathInput.submit()">↵ 答える</button>
+                    <button id="answer-btn-real" onclick="MathInput.submitPC()">↵ 答える</button>
                 </div>
                 
                 <div id="numpad" class="numpad-grid">
@@ -591,7 +589,7 @@ const UI = {
 window.addEventListener('resize', () => {
     if(window.innerWidth >= 800) document.getElementById('left-sidebar').classList.remove('is-active');
     else if (UI.state === 'INIT' || UI.state === 'PAUSED') document.getElementById('left-sidebar').classList.add('is-active');
-    UI.update(); 
+    UI.update(); updateSponsors();
 });
 
 const MathInput = {
@@ -610,6 +608,13 @@ const MathInput = {
         document.getElementById('math-a-text').innerText = this.currentStr === "" ? "_" : this.currentStr;
         const pcBox = document.getElementById('pc-answer-box');
         if(pcBox) pcBox.innerText = this.currentStr === "" ? "_" : this.currentStr;
+    },
+    submitPC() {
+        // 💡 PCの「答える」ボタンが押された時の処理（Enterキーでもここが呼ばれます）
+        const active = document.activeElement;
+        if(active) active.blur();
+        window.focus();
+        this.submit();
     },
     submit() {
         AudioSys.wakeUp(); if (UI.state !== 'MATH' || this.currentStr === "") return;
@@ -725,7 +730,7 @@ const Game = {
         this.nxtPiece = this.genPiece(); this.generateProblem();
     },
     
-    // 💡 完璧にメニュー画面に戻る（PCのバグ対応）
+    // 💡 確実にPCでもスマホでもメニュー画面に戻る・完全リセット機能
     returnToMenu() {
         document.getElementById('overlay-gameover').classList.remove('is-active');
         document.getElementById('overlay-name-entry').classList.remove('is-active');
@@ -837,7 +842,6 @@ const Game = {
             if(remain > 0) pts += Math.floor((Math.floor(remain / 100) * this.speedLevel) * multi);
         }
         
-        // 💡 最高得点カンスト対応
         this.score = Math.min(this.score + pts, 999999999999);
         UI.updateScore(this.score); AudioSys.play('correct');
         
@@ -995,7 +999,6 @@ const Game = {
         else if(this.score >= 500) { lvNum = 10; title = "見習い卒業👍"; nextScore = 1000; }
         else { lvNum = Math.max(1, Math.floor(this.score / 50)); title = "ルーキー🌱"; nextScore = 500; }
 
-        // 💡 最終スコアをバーンと表示！
         document.getElementById('final-score-text').innerText = Number(this.score).toLocaleString() + " 点";
         
         document.getElementById('percentile-text').innerText = `Lv.${lvNum} (${title})`;
@@ -1065,6 +1068,7 @@ const Action = {
     }
 };
 
+// 💡 完璧なキーボード連動（エンターキーの確実な動作と「答える」ボタンの視覚効果）
 document.addEventListener('keydown', (e) => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
         if(UI.state === 'TETRIS' || UI.state === 'MATH') e.preventDefault(); 
@@ -1076,7 +1080,16 @@ document.addEventListener('keydown', (e) => {
             else if(e.key === '-' || e.key === 'Subtract') { MathInput.add('-'); document.getElementById('btn-num-min')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-min')?.classList.remove('key-active'),100); }
             else if(e.key === '.' || e.key === 'Decimal') { MathInput.add('.'); document.getElementById('btn-num-dot')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-dot')?.classList.remove('key-active'),100); }
             else if(e.key === 'Backspace') { MathInput.del(); document.getElementById('btn-num-del')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-del')?.classList.remove('key-active'),100); }
-            else if(e.key === 'Enter') { MathInput.submitPC(); document.getElementById('btn-num-ent')?.classList.add('key-active'); setTimeout(()=>document.getElementById('btn-num-ent')?.classList.remove('key-active'),100); }
+            else if(e.key === 'Enter') { 
+                e.preventDefault(); 
+                MathInput.submitPC(); 
+                document.getElementById('answer-btn-real')?.classList.add('key-active-btn');
+                document.getElementById('btn-num-ent')?.classList.add('key-active'); 
+                setTimeout(()=> {
+                    document.getElementById('answer-btn-real')?.classList.remove('key-active-btn');
+                    document.getElementById('btn-num-ent')?.classList.remove('key-active');
+                }, 100); 
+            }
         }
     } else if (UI.state === 'TETRIS') {
         AudioSys.wakeUp();
@@ -1108,14 +1121,15 @@ const Viral = {
 const Ranking = {
     pendingScore: 0,
     
+    // 💡 伝説の覇者「神AK」の自動登録
     async injectLegend() {
         if(!db) return;
         try {
             const snap = await db.collection('ranks_level_14').get();
             let exists = false;
-            snap.forEach(doc => { if(doc.data().name === 'ぶっちぎりの覇者') exists = true; });
+            snap.forEach(doc => { if(doc.data().name === '神AK') exists = true; });
             if(!exists) {
-                await db.collection('ranks_level_14').add({ name: 'ぶっちぎりの覇者', score: 999999999999, timestamp: new Date() });
+                await db.collection('ranks_level_14').add({ name: '神AK', score: 9999999, timestamp: new Date() });
             }
         } catch(e) {}
     },
