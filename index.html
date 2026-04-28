@@ -10,8 +10,8 @@
 
     <script>
     /* ==========================================================================
-       🌟【設定エリア】🌟
-       ここだけを慎重に上書きしてください。記号（" や , など）は消さないように！
+       🌟【設定エリア】🌟 （セキュリティ保護のためダミーテキスト化しています）
+       以下の "YOUR_***_HERE" の部分を、ご自身の情報に書き換えてください。
     ========================================================================== */
     
     // 1. 短縮URL（LINEやXのシェア用）
@@ -27,7 +27,6 @@ const firebaseConfig = {
   appId: "1:936743834549:web:b82f45ce7c704095b1fffc",
   measurementId: "G-811HH3W7Y4"
 };
-
     /* ========================================================================== */
     </script>
 
@@ -50,12 +49,9 @@ const firebaseConfig = {
         }
 
         #app-container { display: flex; flex-direction: column; height: 100%; width: 100%; position: relative; transition: box-shadow 0.2s;}
-        
-        /* 💡 オーバードライブ演出（3コンボ以上で画面全体が輝く） */
-        .overdrive-glow { animation: overDriveAnim 0.3s ease-out; }
-        @keyframes overDriveAnim { 0% { box-shadow: inset 0 0 0px var(--accent-gold); } 50% { box-shadow: inset 0 0 60px var(--accent-gold); } 100% { box-shadow: inset 0 0 0px var(--accent-gold); } }
+        .fever-glow { animation: feverAnim 0.4s ease-out; }
+        @keyframes feverAnim { 0% { box-shadow: inset 0 0 0px var(--accent-gold); } 50% { box-shadow: inset 0 0 80px var(--accent-gold); } 100% { box-shadow: inset 0 0 0px var(--accent-gold); } }
 
-        /* スマホヘッダー */
         #mobile-header {
             flex: 0 0 55px; display: flex; justify-content: space-between; align-items: center;
             padding: 0 15px; background: var(--bg-panel); border-bottom: 2px solid var(--accent-blue);
@@ -65,7 +61,6 @@ const firebaseConfig = {
         .top-score { font-size: clamp(16px, 5vw, 24px); font-weight: 900; margin: 0; color: var(--accent-gold); transition: transform 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; text-align: right;}
         .menu-toggle-btn { background: var(--btn-bg); color: var(--accent-blue); border: 2px solid var(--accent-blue); border-radius: 6px; padding: 6px 12px; font-weight: bold; cursor: pointer; }
 
-        /* メインエリア */
         #main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
         #left-sidebar {
@@ -81,13 +76,16 @@ const firebaseConfig = {
             flex: 1 1 auto; display: flex; justify-content: center; align-items: center;
             padding: 10px; box-sizing: border-box; min-height: 0; position: relative;
         }
+        /* 💡 10x20マスに合わせたアスペクト比（1:2） */
         #canvas-wrapper {
             position: relative; height: 100%; aspect-ratio: 1/2; max-width: 100%;
             border: 3px solid var(--accent-blue); border-radius: 8px; box-shadow: 0 0 20px rgba(56,189,248,0.15);
             background-color: #020617; overflow: hidden;
         }
         .screen-shake { animation: shakeHard 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        .bomb-shake { animation: shakeBomb 0.5s cubic-bezier(.36,.07,.19,.97) both; border-color: var(--accent-pink) !important;}
         @keyframes shakeHard { 0%, 100% { transform: translate(0, 0); } 20% { transform: translate(-5px, 5px); } 40% { transform: translate(5px, -5px); } 60% { transform: translate(-5px, -5px); } 80% { transform: translate(5px, 5px); } }
+        @keyframes shakeBomb { 0%, 100% { transform: translate(0, 0) scale(1); } 10% { transform: translate(-10px, 10px) scale(1.02); } 30% { transform: translate(10px, -10px) scale(1.02); } 50% { transform: translate(-10px, -10px) scale(1.02); } 70% { transform: translate(10px, 10px) scale(1.02); } }
 
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         #particleCanvas { z-index: 5; pointer-events: none; }
@@ -131,7 +129,7 @@ const firebaseConfig = {
         .math-container.correct-glow { border-color: var(--accent-green); background: rgba(74, 222, 128, 0.1); }
         .math-question { font-size: 28px; font-weight: bold; color: var(--accent-gold); letter-spacing: 2px;}
         .math-answer { font-size: 28px; font-weight: bold; color: #fff; background: var(--btn-bg); padding: 5px 15px; border-radius: 8px; min-width: 80px; text-align: right; border: 2px solid var(--btn-border); height: 45px; line-height: 45px; transition: background 0.1s;}
-        .math-answer.input-flash { background: #cbd5e1; color: #000; } 
+        .math-answer.input-flash { background: #cbd5e1; color: #000; }
 
         #numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 500px; margin: 0 auto;}
         .numpad-btn { background: var(--btn-bg); color: #fff; border: 2px solid var(--btn-border); border-radius: 10px; font-size: 22px; font-weight: bold; height: 48px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 0 var(--bg-dark); cursor: pointer; transition: 0.05s;}
@@ -155,7 +153,6 @@ const firebaseConfig = {
         .rank-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
         .rank-score { font-weight: bold; color: var(--accent-green); white-space: nowrap; flex-shrink: 0; margin-left: 10px;}
 
-        .score-pop { transform: scale(1.4); }
         .error-shake { animation: errShake 0.4s cubic-bezier(.36,.07,.19,.97) both; background-color: #e11d48 !important; border-color: #fff !important;}
         @keyframes errShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         
@@ -167,18 +164,11 @@ const firebaseConfig = {
         .mega-pop.play-fast { animation: popFast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .mega-pop.play-slow { animation: popSlow 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         
-        @keyframes popFast { 
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.1) rotate(-10deg); } 
-            25% { opacity: 1; transform: translate(-50%, -60px) scale(1.5) rotate(10deg); } 
-            70% { opacity: 1; transform: translate(-50%, -70px) scale(1.1) rotate(0deg); filter: blur(0px); } 
-            100% { opacity: 0; transform: translate(-50%, -100px) scale(1.5); filter: blur(10px); } 
-        }
-        @keyframes popSlow { 
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.1) rotate(-5deg); } 
-            20% { opacity: 1; transform: translate(-50%, -60px) scale(1.4) rotate(5deg); } 
-            80% { opacity: 1; transform: translate(-50%, -65px) scale(1.2) rotate(0deg); filter: blur(0px); } 
-            100% { opacity: 0; transform: translate(-50%, -100px) scale(1.8); filter: blur(10px); } 
-        }
+        .mega-pop .pop-main { font-size: clamp(50px, 15vw, 120px); font-weight: 900; font-style: italic; display: block; letter-spacing: 2px; -webkit-text-stroke: 3px #fff;}
+        .mega-pop .pop-sub { font-size: clamp(30px, 10vw, 80px); font-weight: 900; display: block; margin-top: 5px; -webkit-text-stroke: 2px #fff;}
+        
+        @keyframes popFast { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.1) rotate(-10deg); } 25% { opacity: 1; transform: translate(-50%, -60px) scale(1.5) rotate(10deg); } 70% { opacity: 1; transform: translate(-50%, -70px) scale(1.1) rotate(0deg); filter: blur(0px); } 100% { opacity: 0; transform: translate(-50%, -100px) scale(1.5); filter: blur(10px); } }
+        @keyframes popSlow { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.1) rotate(-5deg); } 20% { opacity: 1; transform: translate(-50%, -60px) scale(1.4) rotate(5deg); } 80% { opacity: 1; transform: translate(-50%, -65px) scale(1.2) rotate(0deg); filter: blur(0px); } 100% { opacity: 0; transform: translate(-50%, -100px) scale(1.8); filter: blur(10px); } }
 
         .global-overlay { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; 
@@ -209,14 +199,12 @@ const firebaseConfig = {
             
             #numpad, #puzzle-ui { display: none !important; }
             .pc-score-display { display: block !important; text-align: center; margin-bottom: 20px;}
-            /* 1兆点でもはみ出さない自動縮小設定 */
             .pc-score-display span { font-size: clamp(24px, 3.5vw, 42px); display: block; color: var(--accent-gold); font-weight: 900; line-height: 1.2; text-shadow: 0 0 15px rgba(250,204,21,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
             .pc-level-display { text-align: center; font-size: 14px; font-weight: bold; color: var(--accent-blue); margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px;}
             
             .math-container { flex-direction: column; padding: 30px 10px; gap: 20px; border-width: 4px;}
             #math-problem { font-size: 40px; }
             
-            #math-input-display { width: 100%; text-align: center; height: 60px; line-height: 60px; font-size: 36px; cursor: default;}
             #real-input-container { display: flex !important; gap: 10px; width: 100%; margin-top: 10px;}
             #pc-answer-box { flex: 1; padding: 15px; border-radius: 8px; font-size: 28px; text-align: center; font-weight: bold; border: 3px solid var(--btn-border); background: #fff; color: #000; width: 100%; box-sizing: border-box; height: 64px; display:flex; align-items:center; justify-content:center; cursor: default; transition: background 0.1s;}
             #pc-answer-box.input-flash { background: #cbd5e1; color: #000; }
@@ -246,32 +234,32 @@ const firebaseConfig = {
             <div class="setting-box">
                 <label>レベル (即時反映)</label>
                 <select id="config-level">
-                    <option value="1">Lv1: 1桁の 足し算 (例: 3+5)</option>
-                    <option value="2">Lv2: 1桁の 引き算 (例: 8-3)</option>
-                    <option value="3">Lv3: 1桁の かけ算 (九九)</option>
-                    <option value="4">Lv4: 平方計算 (11〜19の2乗)</option>
+                    <option value="1">Lv1: 1桁の 足し算</option>
+                    <option value="2">Lv2: 1桁の 引き算</option>
+                    <option value="3">Lv3: 1桁の かけ算</option>
+                    <option value="4">Lv4: 平方計算</option>
                     <option value="5">Lv5: 2桁 × 1桁の かけ算</option>
-                    <option value="6">Lv6: 立方数 (2×2×2〜9×9×9)</option>
+                    <option value="6">Lv6: 立方数</option>
                     <option value="7">Lv7: 円周率 (3.14)</option>
-                    <option value="8">Lv8: 13の倍数 (インド式)</option>
-                    <option value="9">Lv9: 17の倍数 (インド式)</option>
-                    <option value="10">Lv10: 19の倍数 (インド式)</option>
+                    <option value="8">Lv8: 13の倍数</option>
+                    <option value="9">Lv9: 17の倍数</option>
+                    <option value="10">Lv10: 19の倍数</option>
                     <option value="11">Lv11: 23の倍数</option>
                     <option value="12">Lv12: 29の倍数</option>
                     <option value="13">Lv13: 37の倍数</option>
                     <option value="14">Lv14: 2桁の かけ算</option>
                     <option value="15">Lv15: 2桁の わり算</option>
-                    <option value="16">Lv16: 全部まぜまぜ (ランダム)</option>
+                    <option value="16">Lv16: ランダム</option>
                 </select>
             </div>
             <div class="setting-box">
                 <label>タイムボーナス (即時反映)</label>
                 <select id="config-time">
-                    <option value="0">なし (じっくり考える)</option>
-                    <option value="10">10秒以内 に答える</option>
-                    <option value="8">8秒以内 に答える</option>
-                    <option value="5">5秒以内 に答える</option>
-                    <option value="3">3秒以内 (神ワザ)</option>
+                    <option value="0">なし (じっくり)</option>
+                    <option value="10">10秒以内</option>
+                    <option value="8">8秒以内</option>
+                    <option value="5">5秒以内</option>
+                    <option value="3">3秒以内</option>
                 </select>
             </div>
             <div class="setting-box">
@@ -314,8 +302,8 @@ const firebaseConfig = {
 
         <div id="center-game">
             <div id="canvas-wrapper">
-                <canvas id="gameCanvas" width="270" height="540"></canvas>
-                <canvas id="particleCanvas" width="270" height="540"></canvas>
+                <canvas id="gameCanvas" width="300" height="600"></canvas>
+                <canvas id="particleCanvas" width="300" height="600"></canvas>
                 <div id="next-box"><canvas id="nextCanvas" width="100%" height="100%"></canvas></div>
                 <div id="pause-overlay">⏸️ PAUSE</div>
             </div>
@@ -381,9 +369,10 @@ const firebaseConfig = {
     <div style="background:var(--bg-panel); border:3px solid var(--accent-gold); border-radius:12px; padding:30px; text-align:center; width:100%; max-width:400px; box-sizing:border-box;">
         <h2 style="color:var(--accent-gold); margin-top:0; font-size:28px;">📖 遊び方</h2>
         <div style="text-align:left; color:#fff; font-weight:bold; line-height:2.0; margin-bottom:25px; font-size:16px;">
-            ① 計算問題を解く！<br><span style="color:var(--accent-blue); font-size:13px; display:block; padding-left:15px; margin-bottom:5px;">正解するとブロックが落ちます。</span>
-            ② ブロックを操作する！<br><span style="color:var(--accent-green); font-size:13px; display:block; padding-left:15px; margin-bottom:5px;">横一列に並べると消えます。</span>
-            ③ 連続正解で大連鎖！<br><span style="color:var(--accent-pink); font-size:13px; display:block; padding-left:15px;">空いた隙間にブロックが落ちて連鎖！</span>
+            ① 計算問題を解く！<br>
+            ② ブロックを落として並べる！<br>
+            ③ 連続正解で大連鎖！<br>
+            <span style="color:var(--accent-pink); font-size:13px; display:block; padding-left:15px;">※たまに「行消し(白)」「爆弾(×)」が出現！</span>
         </div>
         <button class="btn-primary" style="margin:0;" onclick="UI.closeTutorial()">わかった！</button>
     </div>
@@ -431,14 +420,31 @@ const firebaseConfig = {
 
 window.addEventListener('load', () => {
     try {
-        if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== "ここにあなたのAPIキー") {
+        if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
             if (typeof firebase.analytics === 'function') firebase.analytics();
-            Ranking.injectLegend(); // 💡 神AKを登録＆古いデータを消去
+            Ranking.injectLegend();
         }
     } catch(e) { console.error(e); }
     
+    // スマホでのスリープ解除＆音源アンロック
+    const unlockAudio = () => {
+        AudioSys.wakeUp();
+        document.removeEventListener('touchstart', unlockAudio, { capture: true });
+        document.removeEventListener('mousedown', unlockAudio, { capture: true });
+        document.removeEventListener('keydown', unlockAudio, { capture: true });
+    };
+    document.addEventListener('touchstart', unlockAudio, { capture: true, passive: true });
+    document.addEventListener('mousedown', unlockAudio, { capture: true, passive: true });
+    document.addEventListener('keydown', unlockAudio, { capture: true, passive: true });
+    
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && AudioSys.ctx && !AudioSys.isMuted) {
+            AudioSys.ctx.resume();
+        }
+    });
+
     AudioSys.init();
     updateSponsors();
     UI.state = 'INIT';
@@ -457,18 +463,7 @@ let db = null;
 
 const AudioSys = {
     ctx: null, keepAlive: null, isMuted: Sys.storageGet('block_puzzle_muted') === 'true',
-    init() {
-        this.updateBtn();
-        const unlock = () => {
-            this.wakeUp();
-            document.removeEventListener('touchstart', unlock, { capture: true });
-            document.removeEventListener('mousedown', unlock, { capture: true });
-            document.removeEventListener('keydown', unlock, { capture: true });
-        };
-        document.addEventListener('touchstart', unlock, { capture: true, passive: true });
-        document.addEventListener('mousedown', unlock, { capture: true, passive: true });
-        document.addEventListener('keydown', unlock, { capture: true, passive: true });
-    },
+    init() { this.updateBtn(); },
     wakeUp() {
         if(this.isMuted) return;
         try {
@@ -657,22 +652,39 @@ const CanvasSys = {
     canvas: document.getElementById('gameCanvas'), ctx: document.getElementById('gameCanvas').getContext('2d'),
     nextCtx: document.getElementById('nextCanvas').getContext('2d'), pCtx: document.getElementById('particleCanvas').getContext('2d'),
     particles: [],
-    COLORS: [ null, '#ef4444', '#06b6d4', '#22c55e', '#f97316', '#eab308', '#3b82f6', '#d946ef', '#a855f7', '#14b8a6', '#84cc16', '#f43f5e', '#10b981', '#6366f1', '#fff', '#334155', '#ffffff' ],
-    SHAPES: [ [], [[1,1,1,1]], [[2,2],[2,2]], [[0,3,3],[3,3,0]], [[4,4,0],[0,4,4]], [[5,0,0],[5,5,5]], [[0,0,6],[6,6,6]], [[0,7,0],[7,7,7]] ],
+    // 💡 8:白（救済）, 9:黒×（爆弾）
+    COLORS: [ null, '#ef4444', '#06b6d4', '#22c55e', '#f97316', '#eab308', '#3b82f6', '#d946ef', '#ffffff', '#333333' ],
+    SHAPES: [ 
+        [], 
+        [[1,1,1,1]], [[2,2],[2,2]], [[0,3,3],[3,3,0]], [[4,4,0],[0,4,4]], [[5,0,0],[5,5,5]], [[0,0,6],[6,6,6]], [[0,7,0],[7,7,7]],
+        [[8]], // White (Line Clear)
+        [[9]]  // X (Bomb)
+    ],
     
     drawSquare(ctx, x, y, type, size = 30) {
         ctx.fillStyle = this.COLORS[type]; ctx.fillRect(x * size, y * size, size, size);
         ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 1; ctx.strokeRect(x * size, y * size, size, size);
-        ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(x * size + 2, y * size + 2, size - 4, 3);
+        
+        if (type === 9) {
+            // 爆弾ブロック（×印）
+            ctx.beginPath(); ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3;
+            ctx.moveTo(x*size+6, y*size+6); ctx.lineTo(x*size+size-6, y*size+size-6);
+            ctx.moveTo(x*size+size-6, y*size+6); ctx.lineTo(x*size+6, y*size+size-6);
+            ctx.stroke();
+        } else if (type !== 8) {
+            // 通常ブロックのハイライト
+            ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(x * size + 2, y * size + 2, size - 4, 3);
+        }
     },
     
     renderAll(board, curPiece) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.strokeStyle = 'rgba(255,255,255,0.05)'; this.ctx.lineWidth = 1;
-        for(let c=1; c<9; c++) { this.ctx.beginPath(); this.ctx.moveTo(c*30, 0); this.ctx.lineTo(c*30, 540); this.ctx.stroke(); }
-        for(let r=1; r<18; r++) { this.ctx.beginPath(); this.ctx.moveTo(0, r*30); this.ctx.lineTo(270, r*30); this.ctx.stroke(); }
+        // 💡 10x20のグリッド
+        for(let c=1; c<10; c++) { this.ctx.beginPath(); this.ctx.moveTo(c*30, 0); this.ctx.lineTo(c*30, 600); this.ctx.stroke(); }
+        for(let r=1; r<20; r++) { this.ctx.beginPath(); this.ctx.moveTo(0, r*30); this.ctx.lineTo(300, r*30); this.ctx.stroke(); }
 
-        for(let r=0; r<18; r++) { for(let c=0; c<9; c++) { if(board[r][c]) this.drawSquare(this.ctx, c, r, board[r][c]); } }
+        for(let r=0; r<20; r++) { for(let c=0; c<10; c++) { if(board[r][c]) this.drawSquare(this.ctx, c, r, board[r][c]); } }
         
         if(curPiece && UI.state === 'TETRIS') {
             let ghostY = curPiece.y;
@@ -695,6 +707,12 @@ const CanvasSys = {
         nextPiece.shape.forEach((row, y) => row.forEach((val, x) => { if(val) {
             this.nextCtx.fillStyle = this.COLORS[nextPiece.type]; this.nextCtx.fillRect(ox + x*size, oy + y*size, size, size);
             this.nextCtx.strokeStyle = 'rgba(0,0,0,0.8)'; this.nextCtx.strokeRect(ox + x*size, oy + y*size, size, size);
+            if(nextPiece.type === 9) {
+                this.nextCtx.beginPath(); this.nextCtx.strokeStyle = '#ef4444'; this.nextCtx.lineWidth = 1;
+                this.nextCtx.moveTo(ox+x*size+2, oy+y*size+2); this.nextCtx.lineTo(ox+x*size+size-2, oy+y*size+size-2);
+                this.nextCtx.moveTo(ox+x*size+size-2, oy+y*size+2); this.nextCtx.lineTo(ox+x*size+2, oy+y*size+size-2);
+                this.nextCtx.stroke();
+            }
         }}));
     },
     
@@ -704,10 +722,10 @@ const CanvasSys = {
     },
     
     animParticles() {
-        this.pCtx.clearRect(0, 0, 270, 540);
+        this.pCtx.clearRect(0, 0, 300, 600);
         let pChance = Game.mathCombo > 0 ? 0.2 : 0.05; let pSpeed = Game.mathCombo > 0 ? 3 : 1;
         if(Math.random() < pChance && (UI.state === 'MATH' || UI.state === 'TETRIS')) {
-            this.particles.push({ x: Math.random()*270, y: 540, vx: (Math.random()-0.5)*1, vy: -Math.random()*pSpeed-1, life: 0.5, color: '#ffffff', size: Math.random()*2+1 });
+            this.particles.push({ x: Math.random()*300, y: 600, vx: (Math.random()-0.5)*1, vy: -Math.random()*pSpeed-1, life: 0.5, color: '#ffffff', size: Math.random()*2+1 });
         }
         for(let i=this.particles.length-1; i>=0; i--) {
             let p = this.particles[i]; p.x += p.vx; p.y += p.vy; 
@@ -730,7 +748,8 @@ const Game = {
     startNew(forceReset = false) {
         AudioSys.wakeUp();
         if(forceReset) Sys.storageRemove('block_puzzle_save');
-        this.board = Array.from({length: 18}, () => Array(9).fill(0));
+        // 💡 10x20のグリッド
+        this.board = Array.from({length: 20}, () => Array(10).fill(0));
         this.score = 0; this.mathCombo = 0; this.maxCombo = 0; this.isAnimating = false;
         document.getElementById('overlay-gameover').classList.remove('is-active');
         document.getElementById('overlay-name-entry').classList.remove('is-active');
@@ -746,7 +765,7 @@ const Game = {
         if(!saved) return this.startNew(true);
         try {
             const data = JSON.parse(saved);
-            this.board = data.board || Array.from({length: 18}, () => Array(9).fill(0));
+            this.board = data.board || Array.from({length: 20}, () => Array(10).fill(0));
             this.score = data.score || 0;
             document.getElementById('config-level').value = data.level || "1";
             document.getElementById('config-speed').value = data.speed || "5";
@@ -763,7 +782,7 @@ const Game = {
         document.getElementById('overlay-gameover').classList.remove('is-active');
         document.getElementById('overlay-name-entry').classList.remove('is-active');
         Sys.storageRemove('block_puzzle_save');
-        this.board = Array.from({length: 18}, () => Array(9).fill(0));
+        this.board = Array.from({length: 20}, () => Array(10).fill(0));
         CanvasSys.renderAll(this.board, null);
         UI.updateScore(0);
         UI.state = 'INIT';
@@ -873,10 +892,10 @@ const Game = {
         this.score = Math.min(this.score + pts, 999999999999);
         UI.updateScore(this.score); AudioSys.play('correct');
         
-        // 💡 3コンボ以上で画面フラッシュ（オーバードライブ演出）
+        // 💡 3コンボ以上でオーバードライブ演出
         if(this.mathCombo >= 3) {
             const app = document.getElementById('app-container');
-            app.classList.remove('overdrive-glow'); void app.offsetWidth; app.classList.add('overdrive-glow');
+            app.classList.remove('fever-glow'); void app.offsetWidth; app.classList.add('fever-glow');
         }
         
         if(this.mathCombo >= 2) {
@@ -920,8 +939,15 @@ const Game = {
     },
 
     genPiece() {
-        const base = CanvasSys.SHAPES[Math.floor(Math.random() * 7) + 1]; 
-        return { shape: base, x: 4, y: 0, type: Math.floor(Math.random() * 7) + 1 }; 
+        let type = Math.floor(Math.random() * 7) + 1; // 通常 1〜7
+        let rand = Math.random();
+        
+        // 💡 5%で白ブロック(8)、5%で×ブロック(9)が出現
+        if(rand > 0.95) type = 8;
+        else if(rand > 0.90) type = 9;
+
+        const base = CanvasSys.SHAPES[type]; 
+        return { shape: base, x: 4, y: 0, type: type }; 
     },
 
     collide(cx, cy, shape) {
@@ -929,7 +955,8 @@ const Game = {
             for (let x = 0; x < shape[y].length; x++) {
                 if (shape[y][x]) {
                     let nx = cx + x; let ny = cy + y;
-                    if (nx < 0 || nx >= 9 || ny >= 18 || (ny >= 0 && this.board[ny][nx] !== 0)) return true;
+                    // 💡 10x20のグリッド
+                    if (nx < 0 || nx >= 10 || ny >= 20 || (ny >= 0 && this.board[ny][nx] !== 0)) return true;
                 }
             }
         }
@@ -947,16 +974,49 @@ const Game = {
     },
 
     merge() {
+        let hasBomb = false;
+        let bombR = -1; let bombC = -1;
+
         this.curPiece.shape.forEach((row, y) => row.forEach((val, x) => {
-            if (val) this.board[this.curPiece.y + y][this.curPiece.x + x] = this.curPiece.type;
+            if (val) {
+                let br = this.curPiece.y + y;
+                let bc = this.curPiece.x + x;
+                this.board[br][bc] = this.curPiece.type;
+                if(this.curPiece.type === 9) { hasBomb = true; bombR = br; bombC = bc; }
+            }
         }));
-        
+
         Sys.storageSet('block_puzzle_save', JSON.stringify({ board: this.board, score: this.score, level: document.getElementById('config-level').value, speed: document.getElementById('config-speed').value }));
         
-        this.processChains().catch(e => console.error(e)).finally(() => {
-            this.isAnimating = false;
-            this.generateProblem(); 
-        });
+        // 💡 爆弾ブロック（×）の処理：周囲3x3を吹き飛ばす
+        if(hasBomb) {
+            this.isAnimating = true;
+            for(let r = bombR-1; r <= bombR+1; r++) {
+                for(let c = bombC-1; c <= bombC+1; c++) {
+                    if(r>=0 && r<20 && c>=0 && c<10) {
+                        if(this.board[r][c] !== 0) {
+                            CanvasSys.addParticles(c, r, CanvasSys.COLORS[this.board[r][c] === 9 ? 9 : 1], true);
+                            this.board[r][c] = 0;
+                        }
+                    }
+                }
+            }
+            AudioSys.play('bigbang', 2);
+            Sys.vibrate(200);
+            const cw = document.getElementById('canvas-wrapper');
+            cw.classList.remove('bomb-shake'); void cw.offsetWidth; cw.classList.add('bomb-shake');
+            UI.showMegaPop("BOMB!!", "", "var(--accent-pink)", "play-slow");
+            
+            setTimeout(() => {
+                this.processChains().catch(e => console.error(e)).finally(() => {
+                    this.isAnimating = false; this.generateProblem(); 
+                });
+            }, 500);
+        } else {
+            this.processChains().catch(e => console.error(e)).finally(() => {
+                this.isAnimating = false; this.generateProblem(); 
+            });
+        }
     },
 
     async processChains() {
@@ -965,27 +1025,34 @@ const Game = {
         
         while(true) {
             let linesToClear = [];
-            for (let r = 17; r >= 0; r--) {
+            // 下から10x20をチェック
+            for (let r = 19; r >= 0; r--) {
                 let isFull = true;
-                for (let c = 0; c < 9; c++) {
-                    if (this.board[r][c] === 0) { isFull = false; break; }
+                let hasWhite = false;
+                for (let c = 0; c < 10; c++) {
+                    if (this.board[r][c] === 0) isFull = false;
+                    // 💡 白ブロック（救済）があれば、揃っていなくてもその行を消す
+                    if (this.board[r][c] === 8) hasWhite = true;
                 }
-                if (isFull) linesToClear.push(r);
+                if (isFull || hasWhite) linesToClear.push(r);
             }
             if (linesToClear.length === 0) break;
             
             let targetRow = linesToClear[0]; 
 
-            for (let c = 0; c < 9; c++) { this.board[targetRow][c] = 16; }
+            for (let c = 0; c < 10; c++) { this.board[targetRow][c] = 16; }
             CanvasSys.renderAll(this.board, null);
-
             await new Promise(res => setTimeout(res, 400)); 
 
-            for (let c = 0; c < 9; c++) { CanvasSys.addParticles(c, targetRow, CanvasSys.COLORS[16], false); this.board[targetRow][c] = 0; }
+            for (let c = 0; c < 10; c++) { 
+                if(this.board[targetRow][c] !== 0) CanvasSys.addParticles(c, targetRow, CanvasSys.COLORS[16], false); 
+                this.board[targetRow][c] = 0; 
+            }
 
-            for (let c = 0; c < 9; c++) {
-                let writePos = 17;
-                for (let r = 17; r >= 0; r--) {
+            // 💡 新・重力落下システム（ぷよぷよ方式）
+            for (let c = 0; c < 10; c++) {
+                let writePos = 19;
+                for (let r = 19; r >= 0; r--) {
                     if (this.board[r][c] !== 0) {
                         if (r !== writePos) {
                             this.board[writePos][c] = this.board[r][c];
@@ -1023,13 +1090,13 @@ const Game = {
         }
     },
 
-    // 💡 16段階に細分化された新称号＆レベルシステム
+    // 💡 16段階に細かく別れた称号システム（モチベーション維持）
     triggerGameOver() {
         this.pause(); UI.state = 'GAMEOVER'; Sys.storageRemove('block_puzzle_save');
         
         const rankData = [
-            { req: 100000000, title: "創造神🌌", lv: 99 },
-            { req: 9999999, title: "計算神AK👑✨", lv: 90 },
+            { req: 10000000, title: "創造神🌌", lv: 99 },
+            { req: 9999999, title: "神AK👑✨", lv: 90 },
             { req: 5000000, title: "究極の神脳👑", lv: 85 },
             { req: 1000000, title: "伝説のパズラー🌟", lv: 80 },
             { req: 500000, title: "神算鬼謀🔮", lv: 70 },
@@ -1176,7 +1243,7 @@ const Viral = {
         let curLv = document.getElementById('config-level').options[document.getElementById('config-level').selectedIndex].text;
         let titleInfo = document.getElementById('percentile-text').innerText;
         let maxComboText = Game.maxCombo > 0 ? ` (最大 ${Game.maxCombo} コンボ！)` : "";
-        return encodeURIComponent(`【挑戦者求む🔥】\nブロック計算パズルで「${titleInfo}」を獲得しました！\nスコア: ${Number(Game.score).toLocaleString()}点${maxComboText}\n難易度: ${curLv}\n\n私を超えられるかな？😏👇\n#ブロック計算パズル #脳トレ`);
+        return encodeURIComponent(`【挑戦者求む🔥】\nブロック計算パズルで認定「${titleInfo}」を獲得しました！\nスコア: ${Number(Game.score).toLocaleString()}点${maxComboText}\n難易度: ${curLv}\n\n私を超えられるかな？😏👇\n#ブロック計算パズル #脳トレ`);
     },
     shareX() { 
         let url = (typeof APP_SHARE_URL !== 'undefined' && APP_SHARE_URL) ? APP_SHARE_URL : window.location.href;
@@ -1191,6 +1258,7 @@ const Viral = {
 const Ranking = {
     pendingScore: 0,
     
+    // 💡 過去のデータを完全消去し「神AK」を自動登録
     async injectLegend() {
         if(!db) return;
         try {
@@ -1199,15 +1267,13 @@ const Ranking = {
             
             snap.forEach(doc => {
                 let d = doc.data();
-                if(d.name === 'ぶっちぎりの覇者') {
+                if(d.name === 'ぶっちぎりの覇者' || d.name === '神AK') {
                     db.collection('ranks_level_14').doc(doc.id).delete(); 
                 }
-                if(d.name === '神AK') hasKami = true;
             });
             
-            if(!hasKami) {
-                await db.collection('ranks_level_14').add({ name: '神AK', score: 9999999, timestamp: new Date() });
-            }
+            await db.collection('ranks_level_14').add({ name: '神AK', score: 9999999, timestamp: new Date() });
+            
         } catch(e) {}
     },
 
